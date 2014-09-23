@@ -1,117 +1,10 @@
-"""
 
 
-How to Find Niche Solutions
-===========================
-
-### Why Niche?
-
-When exploring complex multi-objective surfaces, it
-is trite to summarize that space with one number
-such _max distance from hell_ (where _hell_ is the
-point in objective space where all goals have their
-worse values). For example, all the following points
-have the same _distance from hell_, but they reflect
-very different solutions:
-
-[[etc/img/gunsbutter.png]]
+from __future__ import division,print_function
+import  sys,random
+sys.dont_write_bytecode = True
 
 
-A better way to do it is _niching_; i.e. generate
-the Pareto frontier, then cluster that frontier and
-report a (small) number of random samples from each
-cluster.  In this approach, "distance from hell" can
-still be used internally to guide a quick search for
-places to expand the frontier. But after that, we
-can isolate interesting different parts of the
-solution space.
-
-For example, when exploring options for configuring
-London Ambulances, Veerappa and Letier  use optimization to
-reject thousands of options (shown in red) in order
-to isolate clusters of better solutions C1,C2,etc
-(shown in green). In this example, the goal is to
-minimize X and maximize Y .
-
-[[etc/img/amus.png]]
-
-
-(REF: V. Veerappa and E. Letier, "Understanding
- clusters of optimal solutions in multi-objective
- decision problems, in RE' 2011, Trento, Italy,
- 2011, pp. 89-98.)
-
-### What is a Niche?
-
-According to Deb and Goldberg (1989) _a niche is
-viewed as an organism's task in the environment and
-a species is a collection of organisms with similar
-features_. 
-
-+ REF: Kalyanmoy Deb and David
-E. Goldberg. 1989.  [An Investigation of Niche and
-Species Formation in Genetic Function
-Optimization](http://goo.gl/oLIxo1). In
-Proceedings of the 3rd International Conference on
-Genetic Algorithms, J. David Schaffer (Ed.). Morgan
-Kaufmann Publishers Inc., San Francisco, CA, USA,
-42-50.
-
-Their definition seems to suggest that niching means
-clustering in objective space and species are the
-things that form in each such cluster. Strange to
-say, some of their examples report _niches_ using
-decision space so all we can say is that it is an
-engineering decision whether or not you _niche_ in
-objective space or _niche_ in decision space. Note
-that the above example from Veerappa and Letier
-build niches in objective space while my code, shown
-below, builds niches in decision space.
-
-### How to Niche?
-
-In any case, in decision or objective space, the
-open issue is now to fun the niches? A naive
-approach is to compute distances between all
-individuals. This can be very slow, especially if
-this calculation is called repeatedly deep inside
-the inner-most loop of a program. In practice, any
-program working with distance spends most of its
-time computing those measures.  Various proposals
-exist to prevent that happening:
-
-+ _Canopy clustering_: McCallum, A.; Nigam, K.; and
-   Ungar L.H. (2000) [ Efficient Clustering of High
-   Dimensional Data Sets with Application to
-   Reference Matching](http://goo.gl/xwIzN),
-   Proceedings of the sixth ACM SIGKDD international
-   conference on Knowledge discovery and data
-   mining, 169-178 
-+ _Incremental stochastic k-means_ [Web-Scale
-  K-Means Clustering](http://goo.gl/V8BQs),
-  WWW 2010, April 26-30, 2010, Raleigh, North
-  Carolina, USA.
-+ _Triangle inequality tricks_ (which work very well
-  indeed) [Making k-means Even Faster](http://goo.gl/hk3Emn).
-  G Hamerly - 2010 SIAM International Conference on
-  Data Mining.
-
-My own favorite trick is WHERE, shown below. It uses
-a data mining trick to recursively divide the space
-of decisions in two, then four, then eight,
-etc. REF: [Local vs. global lessons for defect
-prediction and effort
-estimation](http://menzies.us/pdf/12gense.pdf) T
-Menzies, A Butcher, D Cok, A Marcus, L Layman, F
-Shull, B Turhan, IEEE Transactions on Software
-Engineering 29 (6), 822-834, 2012.
-
-WHERE uses a linear-time trick (called the FastMap
-heuristic) to find two distant solutions- these are
-the _poles_ called _west_ and _east_. Note that the
-following takes only _O(2N)_ distance calculations:
-
-"""
 def fastmap(m,data):
   "Divide data into two using distance to two distant items."
   one  = any(data)             # 1) pick anything
@@ -240,27 +133,10 @@ dividing 100 solutions:
 Here's the slots:
 
 """ 
-class Slots():
-  "Place to read/write named slots."
-  id = -1
-  def __init__(i,**d) : 
-    i.id = Slots.id = Slots.id + 1
-    i.override(d)
-  def override(i,d): i.__dict__.update(d); return i
-  def __eq__(i,j)  : return i.id == j.id   
-  def __ne__(i,j)  : return i.id != j.id   
-  def __repr__(i)  : return '{' + showd(i.__dict__) + '}'
+class o:
+  def __init__(i,*d):i.has().updates(d)
+  def has(i): return i.__dict__
 
-def where0(**other):
-  return Slots(minSize  = 10,    # min leaf size
-               depthMin= 2,      # no pruning till this depth
-               depthMax= 10,     # max tree depth
-               wriggle = 0.2,    # min difference of 'better'
-               prune   = True,   # pruning enabled?
-               b4      = '|.. ', # indent string
-               verbose = False,  # show trace info?
-               hedges  = 0.38    # strict=0.38,relax=0.17
-   ).override(other)
 """
 
 WHERE returns clusters, where each cluster contains
@@ -371,40 +247,7 @@ any  = random.choice
 # pretty-prints for list
 def gs(lst) : return [g(x) for x in lst]
 def g(x)    : return float('%g' % x) 
-"""
 
-### More interesting, low-level stuff
-
-"""
-def timing(f,repeats=10):
-  "How long does 'f' take to run?"
-  import time
-  time1 = time.clock()
-  for _ in range(repeats):
-    f()
-  return (time.clock() - time1)*1.0/repeats
-
-def showd(d):
-  "Pretty print a dictionary."
-  def one(k,v):
-    if isinstance(v,list):
-      v = gs(v)
-    if isinstance(v,float):
-      return ":%s %g" % (k,v)
-    return ":%s %s" % (k,v)
-  return ' '.join([one(k,v) for k,v in
-                    sorted(d.items())
-                     if not "_" in k])
-
-class Num:
-  "An Accumulator for numbers"
-  def __init__(i): i.n = i.m2 = i.mu = 0.0
-  def s(i)       : return (i.m2/(i.n - 1))**0.5
-  def __add__(i,x):
-    i.n   += 1    
-    delta  = x - i.mu
-    i.mu  += delta*1.0/i.n
-    i.m2  += delta*(x - i.mu)
 """
 
 ### Model-specific Stuff
@@ -443,7 +286,7 @@ def some(m,x) :
 
 def candidate(m):
   "Return an unscored individual."
-  return Slots(changed = True,
+  return o(changed = True,
             scores=None, 
             obj = [None] * len(objectives(m)),
             dec = [some(m,d) 

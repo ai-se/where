@@ -3,8 +3,8 @@
 
 stem="${1%.*}"
 file="${stem}py"
-path="../sbse14.wiki/${file}.md"
-url="https://github.com/timm/sbse14"
+path="../where.wiki/${file}.md"
+url="https://github.com/ai-se/where"
 
 echo -n "markuping $1: "
 
@@ -15,10 +15,11 @@ force=$2
 
 if [ -n "$2" -o "$src" -nt "$target" ] 
 then
+echo updating to ${path} ...
 (
 cat<<EOF
 
-[[etc/img/leftarrow.png]]   [Back   to SBSE'14](Home)
+[[etc/img/leftarrow.png]]   [Back   to WHERE](Home)
 
 # $stem
 
