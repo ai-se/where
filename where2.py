@@ -20,18 +20,17 @@ def fastmap(m,data):
   east = furthest(m,west,data) # 3) east is as far as you can go from west
   c    = dist(m,west,east)
   # now find everyone's distance
-  xsum, lst = 0.0,[]
+  lst = []
   for one in data:
     a = dist(m,one,west)
     b = dist(m,one,east)
     x = (a*a + c*c - b*b)/(2*c) # cosine rule
-    xsum += x
+    y = (a**2 - x**2)**0.5
     lst  += [(x,one)]
-  # now cut data according to the mean distance
-  cut, wests, easts = xsum/len(data), [], []
-  for x,one in lst:
-    where = wests if x < cut else easts 
-    where += [one]
+  lst   = sorted(lst)
+  mid   = len(lst)//2
+  wests = lst[:mid]
+  easts = lst[mid:]
   return wests,west, easts,east
 """
 
@@ -51,16 +50,16 @@ objectives) using the _what_ parameter:
 
 """
 def dist(m,i,j,
-         what = lambda x: x.dec):
+         what = lambda m: m.decisions):
   "Euclidean distance 0 <= d <= 1 between decisions"
-  d1,d2  = what(i), what(j)
-  n      = len(d1)
+  n      = len(i.cells)
   deltas = 0
-  for d in range(n):
-    n1 = norm(m, d, d1[d])
-    n2 = norm(m, d, d2[d])
+  for c in what(m):
+    n1 = norm(m, c, i.cells[c])
+    n2 = norm(m, c, j.cells[c])
     inc = (n1-n2)**2
     deltas += inc
+    n += abs(m.w[c])
   return deltas**0.5 / n**0.5
 """
 
@@ -77,14 +76,18 @@ Now we can define _furthest_:
 """
 def furthest(m,i,all,
              init = 0,
-             better = lambda x,y: x>y):
+             better = gt):
   "find which of all is furthest from 'i'"
   out,d= i,init
   for j in all:
-    if not i == j:
-      tmp = dist(m,i,j)
-      if better(tmp,d): out,d = j,tmp
+    if i == j: continue
+    tmp = dist(m,i,j)
+    if better(tmp,d): 
+      out,d = j,tmp
   return out
+
+def closest(m,i,all):
+  return furthest(m,i,all,init=10**32,better=lt)
 """
 
 WHERE finds everyone's else's distance from the poles
@@ -148,39 +151,29 @@ WHERE returns clusters, where each cluster contains
 multiple solutions.
 
 """
-def where0(**other):
-  return o(minSize  = 10,    # min leaf size
-               depthMin= 2,      # no pruning till this depth
-               depthMax= 10,     # max tree depth
-               wriggle = 0.2,    # min difference of 'better'
-               prune   = True,   # pruning enabled?
-               b4      = '|.. ', # indent string
-               verbose = False,  # show trace info?
-               hedges  = 0.38    # strict=0.38,relax=0.17
-   ).update(**other)
 
-def where(m,data,slots=where0()):
+def where(m,data):
   out = []
-  where1(m,data,slots,0,out)
+  where1(m,data,0,out)
   return out
 
-def where1(m, data, slots, lvl, out):
-  def tooDeep(): return lvl > slots.depthMax
-  def tooFew() : return len(data) < slots.minSize
+def where1(m, data,lvl, out):
+  def tooDeep(): return lvl > The.depthMax
+  def tooFew() : return len(data) < The.minSize
   def show(suffix): 
-    if slots.verbose: 
-      print(slots.b4*lvl,len(data),suffix,sep='')
+    if The.verbose: 
+      print(The.b4*lvl,len(data),suffix,sep='')
   if tooDeep() or tooFew():
     show(".")
     out += [data]
   else:
     show("")
     wests,west, easts,east = fastmap(m,data)
-    goLeft, goRight = maybePrune(m,slots,lvl,west,east)
+    goLeft, goRight = maybePrune(m,lvl,west,east)
     if goLeft: 
-      where1(m, wests, slots, lvl+1, out)
+      where1(m, wests, lvl+1, out)
     if goRight: 
-      where1(m, easts, slots, lvl+1, out)
+      where1(m, easts,  lvl+1, out)
 """
 
 Is this useful? Well, in the following experiment, I
@@ -224,13 +217,13 @@ _slots.wriggle_ and one pole has a better score than
 the other, then ignore the other pole.
 
 """
-def maybePrune(m,slots,lvl,west,east):
+def maybePrune(m,lvl,west,east):
   "Usually, go left then right, unless dominated."
   goLeft, goRight = True,True # default
-  if  slots.prune and lvl >= slots.depthMin:
+  if  The.prune and lvl >= The.depthMin:
     sw = scores(m, west)
     se = scores(m, east)
-    if abs(sw - se) > slots.wriggle: # big enough to consider
+    if abs(sw - se) > The.wriggle: # big enough to consider
       if se > sw: goLeft   = False   # no left
       if sw > se: goRight  = False   # no right
   return goLeft, goRight
@@ -280,16 +273,20 @@ def scores(m,it):
       if m.w[c] < 0: 
         tmp = 1 - tmp
       new += (tmp**2) 
-    it.scores = (new**0.5) / (w**0.5)
+    it.score = (new**0.5) / (w**0.5)
     it.scored = True
-  return it.scores
+  return it.score
 
-#@go
+@go
 def _scores():
   m = nasa93()
+  out = []
   for row in m._rows: 
     scores(m,row)
-    print([row.cells[c] for c in m.objectives],row.scores)
+    out += [(row.score, [row.cells[c] for c in m.objectives])]
+  for s,x in sorted(out):
+    print(s,x)
+
 
 """
 
@@ -301,42 +298,44 @@ To run these at load time, add _@go_ (uncommented) on the line before.
 Checks that we can find lost and distant things:
 
 """
-@go
-def _distances():
-  def closest(m,i,all):
-    return furthest(m,i,all,10**32,lambda x,y: x < y)
-  random.seed(1)
-  m   = "any"
-  pop = [candidate(m) for _ in range(4)]  
-  for i in pop:
-    j = closest(m,i,pop)
-    k = furthest(m,i,pop)
-    print("\n",
-          gs(i.dec), g(scores(m,i)),"\n",
-          gs(j.dec),"closest ", g(dist(m,i,j)),"\n",
-          gs(k.dec),"furthest", g(dist(m,i,k)))
-    print(i)
+#@go
+def _distances(m=nasa93):
+   m=m()
+   seed(The.seed)
+   for i in m._rows:
+     j = closest(m,i,  m._rows)
+     k = furthest(m,i, m._rows)
+     idec = [i.cells[c] for c in m.decisions]
+     jdec = [j.cells[c] for c in m.decisions]
+     kdec = [k.cells[c] for c in m.decisions]
+     print("\n",
+           gs(idec), g(scores(m,i)),"\n",
+           gs(jdec),"closest ", g(dist(m,i,j)),"\n",
+           gs(kdec),"furthest", g(dist(m,i,k)))
+    
+
 """
 
 A standard call to WHERE, pruning disabled:
 
 """
 @go
-def _where():
-  random.seed(1)
-  m, max, pop, kept = "model",100, [], N()
-  for _ in range(max):
-    one = candidate(m)
-    kept + scores(m,one)
-    pop += [one]
-  slots = where0(verbose = True,
-               minSize = max**0.5,
+def _where(m=nasa93):
+  m= m()
+  seed(1)
+  told=N()
+  for r in m._rows:
+    s =  scores(m,r)
+    told += s
+  print(told.mu, told.sd())
+  The=defaults(verbose = True,
+               minSize = len(m._rows)**0.5,
                prune   = False,
-               wriggle = 0.3*kept.s())
+               wriggle = 0.3*told.sd())
+  print(The)
   n=0
-  for leaf in where(m, pop, slots):
+  for leaf in where(m, m._rows):
     n += len(leaf)
-  print(n,slots)
 """
 
 Compares WHERE to GAC:
@@ -361,7 +360,7 @@ def _whereTiming():
                 minSize = 2, # emulate GAC
                 depthMax=1000000,
                 prune   = False,
-                wriggle = 0.3*kept.s())
+                wriggle = 0.3*kept.sd())
     t1 =  timing(lambda : where(m, pop, slots),10)
     t2 =  timing(lambda : allPairs(pop),10)
     print(max,t1,t2, int(100*t2/t1))

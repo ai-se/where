@@ -5,7 +5,6 @@ from lib import *
 
 def nasa93():
   vl=1;l=2;n=3;h=4;vh=5;xh=6
-  print(1)
   return data(indep= [ 
      # 0..8
      'Prec', 'Flex', 'Resl', 'Team', 'Pmat', 'rely', 'data', 'cplx', 'ruse',
@@ -113,5 +112,5 @@ def nasa93():
 def _nasa93():
   print(nasa93())
 
-if __name__ == '__main__': eval(todo())
+if __name__ == '__main__': eval(todo('_nasa93()'))
 

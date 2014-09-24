@@ -9,23 +9,21 @@
 from __future__ import division,print_function
 import  sys,random,math
 sys.dont_write_bytecode = True
-
-class o:
-  def __init__(i,**d): i.update(**d)
-  def update(i,**d) : i.__dict__.update(d); return i
-  def __repr__(i):
-    show= ['\t:%s %s\n' % (k,i.__dict__[k]) 
-           for k in sorted(i.__dict__.keys() )
-           if k[0] is not "_"]
-    return '{'+' '.join(show)+'}'
+from settings import *
 
 
-
-def todo(com="print('Your wish is my command.')"):
+def todo(com="print(The._logo,'WHERE (2.0) you at?')"):
   """
   Convert command line to a function call.
-  e.g. python lib.py myfun :a 1 :b fred
-  calls myfun(a=1,b='fred')
+  e.g. if the file lib.py ends with
+
+     if __name__ == '__main__':eval(todo())
+
+  then 
+     
+      python lib.py myfun :a 1 :b fred
+  
+  results in a call to  myfun(a=1,b='fred').
   """
   if len(sys.argv) < 2: return com
   def strp(x): return isinstance(x,basestring)
@@ -39,7 +37,7 @@ def todo(com="print('Your wish is my command.')"):
   twos = [two(x,y) for x,y in oneTwo(sys.argv[2:])]
   return sys.argv[1]+'(**dict('+ ','.join(twos)+'))'
 
-def _cmdDemo(a=1,b=2):
+def _todoDemo(a=1,b=2):
   print(b)
 
 def go(f):
@@ -61,7 +59,15 @@ Pretty-prints for list
 
 """
 def gs(lst) : return [g(x) for x in lst]
-def g(x)    : return float('%g' % x) 
+def g(x)    : 
+  txt = '%g' % x
+  return int(txt) if int(x) == x else float(txt)
+
+def say(*lst): print(*lst,end="")
+
+
+def gt(x,y): return x > y
+def lt(x,y): return x < y
 """
 
 ## More interesting, low-level stuff
@@ -90,13 +96,14 @@ def showd(d):
 class N:
   "An Accumulator for numbers"
   def __init__(i): i.n = i.m2 = i.mu = 0.0
-  def s(i)       : return (i.m2/(i.n - 1))**0.5
+  def sd(i)       : return (i.m2/(i.n - 1))**0.5
   def __iadd__(i,x):
     i.n   += 1    
     delta  = x - i.mu
     i.mu  += delta*1.0/i.n
     i.m2  += delta*(x - i.mu)
     return i
+
 
 def data(indep=[], less=[], more=[], _rows=[]):
   nindep= len(indep)
