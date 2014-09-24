@@ -5,6 +5,7 @@ from lib import *
 
 def nasa93():
   vl=1;l=2;n=3;h=4;vh=5;xh=6
+  print(1)
   return data(indep= [ 
      # 0..8
      'Prec', 'Flex', 'Resl', 'Team', 'Pmat', 'rely', 'data', 'cplx', 'ruse',
@@ -109,5 +110,5 @@ def nasa93():
       [h,h,h,vh,n,h,n,vh,n,n,vh,vh,h,n,n,n,n,l,l,n,n,n,  3.0, 38,231,12.0],
     ])
 
-if __name__ == "__main__": print(nasa93())
+cmd()
 
