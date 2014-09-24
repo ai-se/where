@@ -1,3 +1,10 @@
+"""
+
+# A Better Where
+
+Updating old Where with new Python tricks.
+
+"""
 
 
 from __future__ import division,print_function
