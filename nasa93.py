@@ -110,5 +110,8 @@ def nasa93():
       [h,h,h,vh,n,h,n,vh,n,n,vh,vh,h,n,n,n,n,l,l,n,n,n,  3.0, 38,231,12.0],
     ])
 
-cmd()
+def _nasa93():
+  print(nasa93())
+
+if __name__ == '__main__': eval(todo())
 

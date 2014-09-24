@@ -102,23 +102,20 @@ def data(indep=[], less=[], more=[], _rows=[]):
   nindep= len(indep)
   ndep  = len(less) + len(more)
   m= o(lo={}, hi={}, w={}, 
-       eval  = lambda m,it : m,
+       eval  = lambda m,it : True,
        _rows = [o(cells=r,score=0,scored=False) 
                 for r in _rows],
        names = indep+less+more)
   m.decisions  = [x for x in range(nindep)]
   m.objectives = [nindep+ x- 1 for x in range(ndep)]
+  m.cols       = m.decisions + m.objectives
   for x in m.decisions : 
     m.w[x]=  1
   for y,_ in enumerate(less) : 
     m.w[x+y]   = -1
   for z,_ in enumerate(more) : 
     m.w[x+y+z] =  1
-  for x in m.decisions:
-    all = sorted(row.cells[x] for row in m._rows)
-    m.lo[x] = all[0]
-    m.hi[x] = all[-1]
-  for x in m.objectives:
+  for x in m.cols:
     all = sorted(row.cells[x] for row in m._rows)
     m.lo[x] = all[0]
     m.hi[x] = all[-1]
