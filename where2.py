@@ -4,13 +4,14 @@
 
 Updating old Where with new Python tricks.
 
+## Standard Start stuf
+
 """
-
-
 from __future__ import division,print_function
-import  sys,random
+import  sys
 sys.dont_write_bytecode = True
-
+from lib import *
+from nasa93 import *
 
 def fastmap(m,data):
   "Divide data into two using distance to two distant items."
@@ -66,9 +67,9 @@ def dist(m,i,j,
 The _Dist_ function normalizes all the raw values zero to one.
 
 """
-def norm(m,x,n) : 
-  "Normalizes value n on variable x within model m 0..1"
-  return (n - lo(m,x)) / (hi(m,x) - lo(m,x) + 0.0001)
+def norm(m,c,val) : 
+  "Normalizes val in col c within model m 0..1"
+  return (val- m.lo[c]) / (m.hi[c]- m.lo[c]+ 0.0001)
 """
 
 Now we can define _furthest_:
@@ -140,9 +141,6 @@ dividing 100 solutions:
 Here's the slots:
 
 """ 
-class o:
-  def __init__(i,*d):i.has().updates(d)
-  def has(i): return i.__dict__
 
 """
 
@@ -150,6 +148,17 @@ WHERE returns clusters, where each cluster contains
 multiple solutions.
 
 """
+def where0(**other):
+  return o(minSize  = 10,    # min leaf size
+               depthMin= 2,      # no pruning till this depth
+               depthMax= 10,     # max tree depth
+               wriggle = 0.2,    # min difference of 'better'
+               prune   = True,   # pruning enabled?
+               b4      = '|.. ', # indent string
+               verbose = False,  # show trace info?
+               hedges  = 0.38    # strict=0.38,relax=0.17
+   ).update(**other)
+
 def where(m,data,slots=where0()):
   out = []
   where1(m,data,slots,0,out)
@@ -160,7 +169,7 @@ def where1(m, data, slots, lvl, out):
   def tooFew() : return len(data) < slots.minSize
   def show(suffix): 
     if slots.verbose: 
-      print slots.b4*lvl + str(len(data)) + suffix
+      print(slots.b4*lvl,len(data),suffix,sep='')
   if tooDeep() or tooFew():
     show(".")
     out += [data]
@@ -230,33 +239,6 @@ def maybePrune(m,slots,lvl,west,east):
 Note that I do not allow pruning until we have
 descended at least _slots.depthMin_ into the tree.
 
-
-Support Code
-------------
-
-### Dull, low-level stuff
-
-"""
-import sys,math,random
-sys.dont_write_bytecode = True
-
-def go(f):
-  "A decorator that runs code at load time."
-  print "\n# ---|", f.__name__,"|-----------------"
-  if f.__doc__: print "#", f.__doc__
-  f()
-
-# random stuff
-by   = lambda x: random.uniform(0,x) 
-seed = random.seed
-any  = random.choice
-
-# pretty-prints for list
-def gs(lst) : return [g(x) for x in lst]
-def g(x)    : return float('%g' % x) 
-
-"""
-
 ### Model-specific Stuff
 
 WHERE talks to models via the the following model-specific functions.
@@ -266,18 +248,8 @@ In practice, you would **start** here to build hooks from WHERE into your model
 (which is the **m** passed in to these functions).
 
 """
-def decisions(m) : return [0,1,2,3,4]
-def objectives(m): return [0,1,2,3]
-def lo(m,x)      : return 0.0
-def hi(m,x)      : return  1.0
-def w(m,o)       : return 1 # min,max is -1,1
-def score(m, individual):
-  d, o = individual.dec, individual.obj
-  o[0] = d[0] * d[1]
-  o[1] = d[2] ** d[3]
-  o[2] = 2.0*d[3]*d[4] / (d[3] + d[4])
-  o[3] =  d[2]/(1 + math.e**(-1*d[2]))
-  individual.changed = True
+
+
 """
 
 The call to 
@@ -289,32 +261,38 @@ useful general functions.
 """
 def some(m,x) :
   "with variable x of model m, pick one value at random" 
-  return lo(m,x) + by(hi(m,x) - lo(m,x))
+  return m.lo[x] + by(m.hi[x] - m.lo[x])
 
 def candidate(m):
-  "Return an unscored individual."
-  return o(changed = True,
-            scores=None, 
-            obj = [None] * len(objectives(m)),
-            dec = [some(m,d) 
-                   for d in decisions(m)])
+  "Return an individual."
+  for row in m._rows:
+    yield row
 
-def scores(m,t):
+def scores(m,it):
   "Score an individual."
-  if t.changed:
-    score(m,t)
-    new, n = 0, 0
-    for o in objectives(m):
-      x   = t.obj[o]
-      n  += 1
-      tmp = norm(m,o,x)**2
-    if w(m,o) < 0: 
-      tmp = 1 - tmp
-    new += tmp 
-    t.scores = (new**0.5)*1.0 / (n**0.5)
-    t.changed = False
-  return t.scores
+  if not it.scored:
+    m.eval(m,it)
+    new, w = 0, 0
+    for c in m.objectives:
+      val = it.cells[c]
+      w  += abs(m.w[c])
+      tmp = norm(m,c,val)
+      if m.w[c] < 0: 
+        tmp = 1 - tmp
+      new += (tmp**2) 
+    it.scores = (new**0.5) / (w**0.5)
+    it.scored = True
+  return it.scores
+
+#@go
+def _scores():
+  m = nasa93()
+  for row in m._rows: 
+    scores(m,row)
+    print([row.cells[c] for c in m.objectives],row.scores)
+
 """
+
 
 ### Demo stuff
 
@@ -333,11 +311,11 @@ def _distances():
   for i in pop:
     j = closest(m,i,pop)
     k = furthest(m,i,pop)
-    print "\n",\
-          gs(i.dec), g(scores(m,i)),"\n",\
-          gs(j.dec),"closest ", g(dist(m,i,j)),"\n",\
-          gs(k.dec),"furthest", g(dist(m,i,k))
-    print i
+    print("\n",
+          gs(i.dec), g(scores(m,i)),"\n",
+          gs(j.dec),"closest ", g(dist(m,i,j)),"\n",
+          gs(k.dec),"furthest", g(dist(m,i,k)))
+    print(i)
 """
 
 A standard call to WHERE, pruning disabled:
@@ -346,7 +324,7 @@ A standard call to WHERE, pruning disabled:
 @go
 def _where():
   random.seed(1)
-  m, max, pop, kept = "model",100, [], Num()
+  m, max, pop, kept = "model",100, [], N()
   for _ in range(max):
     one = candidate(m)
     kept + scores(m,one)
@@ -358,13 +336,13 @@ def _where():
   n=0
   for leaf in where(m, pop, slots):
     n += len(leaf)
-  print n,slots
+  print(n,slots)
 """
 
 Compares WHERE to GAC:
 
 """
-@go
+#@go
 def _whereTiming():
   def allPairs(data):
     n = 8.0/3*(len(data)**2 - 1) #numevals WHERE vs GAC
@@ -374,7 +352,7 @@ def _whereTiming():
       dist("M",d1,d2)
   random.seed(1)
   for max in [32,64,128,256]:
-    m, pop, kept = "model",[], Num()
+    m, pop, kept = "model",[], N()
     for _ in range(max):
       one = candidate(m)
       kept + scores(m,one)
@@ -386,4 +364,4 @@ def _whereTiming():
                 wriggle = 0.3*kept.s())
     t1 =  timing(lambda : where(m, pop, slots),10)
     t2 =  timing(lambda : allPairs(pop),10)
-    print max,t1,t2, int(100*t2/t1)
+    print(max,t1,t2, int(100*t2/t1))
