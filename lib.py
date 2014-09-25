@@ -182,6 +182,7 @@ Adds in information on _cols_, _decisions_, _hi,lo_, etc:
           20: 1, 21: 1, 22: -1, 23: -1, 24: -1}
     }
 
+Code:
 
 """
 def data(indep=[], less=[], more=[], _rows=[]):
