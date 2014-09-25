@@ -1,6 +1,17 @@
-import  sys,copy
-sys.dont_write_bytecode = True
+"""
 
+# Place to store settings.
+
+## Usual Header
+
+"""
+import  sys
+sys.dont_write_bytecode = True
+"""
+
+## Anonymous Containers
+
+"""
 class o:
   def __init__(i,**d): i.update(**d)
   def update(i,**d) : i.__dict__.update(d); return i
@@ -9,7 +20,11 @@ class o:
       for k in sorted(i.__dict__.keys() ) 
       if k[0] is not "_"]
     return '{'+' '.join(show)+'}'
+"""
 
+## Defining the defaults
+
+"""
 def defaults(**also):
   return o(_logo="""
             ,.-""``""-.,
