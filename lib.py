@@ -58,6 +58,10 @@ any  = random.choice
 Pretty-prints for list
 
 """
+def first(lst): return lst[0]
+def second(lst): return lst[1]
+def third(lst): return lst[2]
+
 def gs(lst) : return [g(x) for x in lst]
 def g(x)    : 
   txt = '%g' % x

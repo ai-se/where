@@ -25,12 +25,12 @@ def fastmap(m,data):
     a = dist(m,one,west)
     b = dist(m,one,east)
     x = (a*a + c*c - b*b)/(2*c) # cosine rule
-    y = (a**2 - x**2)**0.5
+    y = max(0, a**2 - x**2)**0.5
     lst  += [(x,one)]
   lst   = sorted(lst)
   mid   = len(lst)//2
-  wests = lst[:mid]
-  easts = lst[mid:]
+  wests = map(second,lst[:mid])
+  easts = map(second,lst[mid:])
   return wests,west, easts,east
 """
 
@@ -277,7 +277,7 @@ def scores(m,it):
     it.scored = True
   return it.score
 
-@go
+#@go
 def _scores():
   m = nasa93()
   out = []
@@ -286,8 +286,6 @@ def _scores():
     out += [(row.score, [row.cells[c] for c in m.objectives])]
   for s,x in sorted(out):
     print(s,x)
-
-
 """
 
 
@@ -327,40 +325,11 @@ def _where(m=nasa93):
   for r in m._rows:
     s =  scores(m,r)
     told += s
-  print(told.mu, told.sd())
+  global The
   The=defaults(verbose = True,
                minSize = len(m._rows)**0.5,
                prune   = False,
                wriggle = 0.3*told.sd())
-  print(The)
   n=0
   for leaf in where(m, m._rows):
     n += len(leaf)
-"""
-
-Compares WHERE to GAC:
-
-"""
-#@go
-def _whereTiming():
-  def allPairs(data):
-    n = 8.0/3*(len(data)**2 - 1) #numevals WHERE vs GAC
-    for _ in range(int(n+0.5)):
-      d1 = any(data)
-      d2 = any(data)
-      dist("M",d1,d2)
-  random.seed(1)
-  for max in [32,64,128,256]:
-    m, pop, kept = "model",[], N()
-    for _ in range(max):
-      one = candidate(m)
-      kept + scores(m,one)
-      pop += [one]
-    slots = where0(verbose = False,
-                minSize = 2, # emulate GAC
-                depthMax=1000000,
-                prune   = False,
-                wriggle = 0.3*kept.sd())
-    t1 =  timing(lambda : where(m, pop, slots),10)
-    t2 =  timing(lambda : allPairs(pop),10)
-    print(max,t1,t2, int(100*t2/t1))
