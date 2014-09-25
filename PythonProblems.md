@@ -1,12 +1,16 @@
+
 # Python Tutorials
 
 ## Great Book
 
-<a href="http://www.amazon.com/Python-101-Michael-Driscoll-ebook/dp/B00KQTFHNK"><img src="http://goo.gl/UcMhL7" align=right width=200></a>
+<a href="http://www.amazon.com/Python-101-Michael-Driscoll-ebook/dp/B00KQTFHNK"><img src="http://goo.gl/UcMhL7" align=right width=400></a>
+
 
 + [Python 101... for $3](http://www.amazon.com/Python-101-Michael-Driscoll-ebook/dp/B00KQTFHNK)
 + [Think Python: How to Think Like a Computer Scientist](http://www.greenteapress.com/thinkpython/html/index.html)
 
+
+<br clear=all>
 
 ## Quick  Intro Stuff
 
