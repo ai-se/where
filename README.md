@@ -5,7 +5,7 @@ Recursive fastmap clustering.
 
 Check out the code into one directory. Then
 
-     python masa93.py
+     python nasa93.py
 
 If that works, you should see:
 
