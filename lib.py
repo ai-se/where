@@ -121,7 +121,6 @@ def todo(com="print(The._logo,'WHERE (2.0) you at?')"):
   def two(x,y): return x[1:] +"="+wrap(value(y))
   twos = [two(x,y) for x,y in oneTwo(sys.argv[2:])]
   return sys.argv[1]+'(**dict('+ ','.join(twos)+'))'
-
 """
 
 ## More interesting, low-level stuff
@@ -137,6 +136,52 @@ def timing(f,repeats=10):
 """
 
 ## Data Completion Tool
+
+Fills in some details on a table of data. For example, 
+
+     def nasa93():
+       vl=1;l=2;n=3;h=4;vh=5;xh=6
+       return data(indep= [ 
+                     'Prec', 'Flex', 'Resl', 'Team', 'Pmat', 'rely', 'data', 'cplx', 'ruse',
+                     'docu', 'time', 'stor', 'pvol', 'acap', 'pcap', 'pcon', 'aexp', 'plex',  
+                     'ltex', 'tool', 'site', 'sced', 'kloc'],
+                   less = ['effort', 'defects', 'months'],
+                   _rows=[
+                      [h,h,h,vh,h,h,l,h,n,n,n,n,l,n,n,n,n,n,h,n,n,l,25.9,117.6,808,15.3],
+                      [h,h,h,vh,h,h,l,h,n,n,n,n,l,n,n,n,n,n,h,n,n,l,24.6,117.6,767,15.0],
+                      [h,h,h,vh,h,h,l,h,n,n,n,n,l,n,n,n,n,n,h,n,n,l,7.7,31.2,240,10.1],
+     ...
+
+Adds in information on _cols_, _decisions_, _hi,lo_, etc:
+
+    {	:cols [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 
+             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 
+             22, 22, 23, 24]
+ 	    :decisions [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 
+                  11, 12, 13, 14, 15, 16, 17, 18, 
+                  19, 20, 21, 22]
+ 	    :eval <function <lambda> at 0x7f3f825bea28>
+ 	    :hi {0: 4, 1: 4, 2: 4, 3: 5, 4: 4, 5: 5, 6: 5, 
+           7: 6, 8: 3, 9: 3, 10: 6, 11: 6, 12: 4, 13: 5, 
+           14: 5, 15: 3, 16: 5, 17: 4, 18: 4, 19: 4, 
+           20: 3, 21: 3, 22: 980, 23: 8211, 24: 50961}
+ 	    :lo {0: 4, 1: 4, 2: 4, 3: 5, 4: 2, 5: 2, 6: 2, 
+           7: 2, 8: 3, 9: 3, 10: 3, 11: 3, 12: 2, 
+           13: 3, 14: 3, 15: 3, 16: 2, 17: 1, 18: 1, 
+            19: 3, 20: 3, 21: 2, 22: 0.9, 23: 8.4, 24: 28}
+ 	    :names ['Prec', 'Flex', 'Resl', 'Team', 'Pmat', 
+              'rely', 'data', 'cplx', 'ruse', 'docu', 
+              'time', 'stor', 'pvol', 'acap', 'pcap', 
+              'pcon', 'aexp', 'plex', 'ltex', 'tool', 
+              'site', 'sced', 'kloc', 'effort', 
+              'defects', 'months']
+ 	    :objectives [22, 23, 24]
+ 	    :w {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 
+          7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 
+          14: 1, 15: 1, 16: 1, 17: 1, 18: 1, 19: 1, 
+          20: 1, 21: 1, 22: -1, 23: -1, 24: -1}
+    }
+
 
 """
 def data(indep=[], less=[], more=[], _rows=[]):
