@@ -3,28 +3,113 @@
 # Support Code
 
 
-## Dull, low-level stuff
+## Standard Headers
 
 """
 from __future__ import division,print_function
 import  sys,random,math
 sys.dont_write_bytecode = True
 from settings import *
+"""
 
+## Simple, low-level stuff
 
+### Maths Stuff
+
+"""
+def gt(x,y): return x > y
+def lt(x,y): return x < y
+"""
+
+An accumulator for numbers.
+
+"""
+class N:
+  "An Accumulator for numbers"
+  def __init__(i): i.n = i.m2 = i.mu = 0.0
+  def sd(i)       : return (i.m2/(i.n - 1))**0.5
+  def __iadd__(i,x):
+    i.n   += 1    
+    delta  = x - i.mu
+    i.mu  += delta*1.0/i.n
+    i.m2  += delta*(x - i.mu)
+    return i
+"""
+
+### Random stuff.
+
+"""
+by   = lambda x: random.uniform(0,x) 
+seed = random.seed
+any  = random.choice
+"""
+
+### List Handling Tricks
+
+"""
+def first(lst): return lst[0]
+def second(lst): return lst[1]
+def third(lst): return lst[2]
+"""
+
+### Printing Stuff
+
+Print without newline:
+
+"""
+def say(*lst): print(*lst,end="")
+"""
+
+Print a list of numbers without an excess of decimal places:
+
+"""
+def gs(lst) : return [g(x) for x in lst]
+def g(x)    : 
+  txt = '%g' % x
+  return int(txt) if int(x) == x else float(txt)
+"""
+
+Pretty print a dictionary:
+
+"""
+def showd(d):
+  def one(k,v):
+    if isinstance(v,list):
+      v = gs(v)
+    if isinstance(v,float):
+      return ":%s %g" % (k,v)
+    return ":%s %s" % (k,v)
+  return ' '.join([one(k,v) for k,v in
+                    sorted(d.items())
+                     if not "_" in k])
+"""
+
+## Decorator to run code at Start-up
+
+"""
+def go(f):
+  "A decorator that runs code at load time."
+  print("\n# ---|", f.__name__,"|-----------------")
+  if f.__doc__: print("#", f.__doc__)
+  f()
+"""
+
+## Handling command line options.
+
+Convert command line to a function call.
+e.g. if the file lib.py ends with
+
+    if __name__ == '__main__':eval(todo())
+
+then 
+
+    python lib.py myfun :a 1 :b fred  
+
+results in a call to  _myfun(a=1,b='fred')_.
+
+"""
 def todo(com="print(The._logo,'WHERE (2.0) you at?')"):
-  """
-  Convert command line to a function call.
-  e.g. if the file lib.py ends with
-
-     if __name__ == '__main__':eval(todo())
-
-  then 
-     
-      python lib.py myfun :a 1 :b fred
-  
-  results in a call to  myfun(a=1,b='fred').
-  """
+  import sys
   if len(sys.argv) < 2: return com
   def strp(x): return isinstance(x,basestring)
   def wrap(x): return "'%s'"%x if strp(x) else str(x)  
@@ -37,41 +122,6 @@ def todo(com="print(The._logo,'WHERE (2.0) you at?')"):
   twos = [two(x,y) for x,y in oneTwo(sys.argv[2:])]
   return sys.argv[1]+'(**dict('+ ','.join(twos)+'))'
 
-def _todoDemo(a=1,b=2):
-  print(b)
-
-def go(f):
-  "A decorator that runs code at load time."
-  print("\n# ---|", f.__name__,"|-----------------")
-  if f.__doc__: print("#", f.__doc__)
-  f()
-"""
-
-Random stuff.
-
-"""
-by   = lambda x: random.uniform(0,x) 
-seed = random.seed
-any  = random.choice
-"""
-
-Pretty-prints for list
-
-"""
-def first(lst): return lst[0]
-def second(lst): return lst[1]
-def third(lst): return lst[2]
-
-def gs(lst) : return [g(x) for x in lst]
-def g(x)    : 
-  txt = '%g' % x
-  return int(txt) if int(x) == x else float(txt)
-
-def say(*lst): print(*lst,end="")
-
-
-def gt(x,y): return x > y
-def lt(x,y): return x < y
 """
 
 ## More interesting, low-level stuff
@@ -84,31 +134,11 @@ def timing(f,repeats=10):
   for _ in range(repeats):
     f()
   return (time.clock() - time1)*1.0/repeats
+"""
 
-def showd(d):
-  "Pretty print a dictionary."
-  def one(k,v):
-    if isinstance(v,list):
-      v = gs(v)
-    if isinstance(v,float):
-      return ":%s %g" % (k,v)
-    return ":%s %s" % (k,v)
-  return ' '.join([one(k,v) for k,v in
-                    sorted(d.items())
-                     if not "_" in k])
+## Data Completion Tool
 
-class N:
-  "An Accumulator for numbers"
-  def __init__(i): i.n = i.m2 = i.mu = 0.0
-  def sd(i)       : return (i.m2/(i.n - 1))**0.5
-  def __iadd__(i,x):
-    i.n   += 1    
-    delta  = x - i.mu
-    i.mu  += delta*1.0/i.n
-    i.m2  += delta*(x - i.mu)
-    return i
-
-
+"""
 def data(indep=[], less=[], more=[], _rows=[]):
   nindep= len(indep)
   ndep  = len(less) + len(more)
@@ -131,5 +161,9 @@ def data(indep=[], less=[], more=[], _rows=[]):
     m.lo[x] = all[0]
     m.hi[x] = all[-1]
   return m
+"""
 
+## Start-up Actions
+
+"""
 if __name__ == '__main__': eval(todo())
