@@ -61,6 +61,10 @@ def defaults(**also):
       hedges  = 0.38,   # strict=0.38,relax=0.17)
       seed    = 1
   ).update(**also)
+"""
 
+And a global to hold the defaults.
+
+"""
 The=defaults()
 
