@@ -2,9 +2,11 @@
 
 # A Better Where
 
-Updating old Where with new Python tricks.
+WHERE2 is a near-linear time top-down clustering alogithm.
 
-## Standard Start stuf
+WHERE2 updated an older where with new Python tricks.
+
+## Standard Header Stuff
 
 """
 from __future__ import division,print_function
@@ -13,6 +15,14 @@ sys.dont_write_bytecode = True
 from lib import *
 from nasa93 import *
 
+"""
+
+## Dimensionality Reduction with Fastmp
+
+Project data in N dimensions down to a single dimension connecting
+twp distant points. Divide that data at the median of those projects.
+
+"""
 def fastmap(m,data):
   "Divide data into two using distance to two distant items."
   one  = any(data)             # 1) pick anything
@@ -25,7 +35,7 @@ def fastmap(m,data):
     a = dist(m,one,west)
     b = dist(m,one,east)
     x = (a*a + c*c - b*b)/(2*c) # cosine rule
-    y = max(0, a**2 - x**2)**0.5
+    y = max(0, a**2 - x**2)**0.5 # not used, here for a demo
     lst  += [(x,one)]
   lst   = sorted(lst)
   mid   = len(lst)//2
@@ -85,12 +95,17 @@ def furthest(m,i,all,
     if better(tmp,d): 
       out,d = j,tmp
   return out
+"""
 
+And of course, _closest_:
+
+"""
 def closest(m,i,all):
   return furthest(m,i,all,init=10**32,better=lt)
 """
 
-WHERE finds everyone's else's distance from the poles
+
+WHERE2 finds everyone's else's distance from the poles
   and divide the data on the mean point of those
   distances.  This all stops if:
 
@@ -106,7 +121,7 @@ some sub-tree (this process is discussed, later on).
 Also, if _slots.verbose_ is true, the _show_
 function prints out a little tree showing the
 progress (and to print indents in that tree, we use
-the string _slots.b4_).  For example, here's WHERE
+the string _slots.b4_).  For example, here's WHERE2
 dividing 100 solutions:
     
     100
@@ -147,17 +162,17 @@ Here's the slots:
 
 """
 
-WHERE returns clusters, where each cluster contains
+WHERE2 returns clusters, where each cluster contains
 multiple solutions.
 
 """
 
-def where(m,data):
+def where2(m,data):
   out = []
-  where1(m,data,0,out)
+  where2a(m,data,0,out)
   return out
 
-def where1(m, data,lvl, out):
+def where2a(m, data,lvl, out):
   def tooDeep(): return lvl > The.depthMax
   def tooFew() : return len(data) < The.minSize
   def show(suffix): 
@@ -171,13 +186,13 @@ def where1(m, data,lvl, out):
     wests,west, easts,east = fastmap(m,data)
     goLeft, goRight = maybePrune(m,lvl,west,east)
     if goLeft: 
-      where1(m, wests, lvl+1, out)
+      where2a(m, wests, lvl+1, out)
     if goRight: 
-      where1(m, easts,  lvl+1, out)
+      where2a(m, easts,  lvl+1, out)
 """
 
 Is this useful? Well, in the following experiment, I
-clustered 32, 64, 128, 256 individuals using WHERE or
+clustered 32, 64, 128, 256 individuals using WHERE2 or
 a dumb greedy approach called GAC that (a) finds
 everyone's closest neighbor; (b) combines each such
 pair into a super-node; (c) then repeats
@@ -188,7 +203,7 @@ pair into a super-node; (c) then repeats
 
 
 
-WHERE is _much_ faster than GAC since it builds
+WHERE2 is _much_ faster than GAC since it builds
 a tree of cluster of height log(N) by, at each
 step, making only  O(2N) calls to FastMap.
 
@@ -234,10 +249,10 @@ descended at least _slots.depthMin_ into the tree.
 
 ### Model-specific Stuff
 
-WHERE talks to models via the the following model-specific functions.
+WHERE2 talks to models via the the following model-specific functions.
 Here, we must invent some made-up model that builds
 individuals with 4 decisions and 3 objectives.
-In practice, you would **start** here to build hooks from WHERE into your model
+In practice, you would **start** here to build hooks from WHERE2 into your model
 (which is the **m** passed in to these functions).
 
 """
@@ -248,7 +263,7 @@ In practice, you would **start** here to build hooks from WHERE into your model
 The call to 
 ### Model-general stuff
 
-Using the model-specific stuff, WHERE defines some
+Using the model-specific stuff, WHERE2 defines some
 useful general functions.
 
 """
@@ -314,7 +329,7 @@ def _distances(m=nasa93):
 
 """
 
-A standard call to WHERE, pruning disabled:
+A standard call to WHERE2, pruning disabled:
 
 """
 @go
@@ -331,5 +346,5 @@ def _where(m=nasa93):
                prune   = False,
                wriggle = 0.3*told.sd())
   n=0
-  for leaf in where(m, m._rows):
+  for leaf in where2(m, m._rows):
     n += len(leaf)
