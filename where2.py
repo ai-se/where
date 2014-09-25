@@ -232,23 +232,22 @@ descended at least _slots.depthMin_ into the tree.
 
 WHERE2 talks to models via the the following model-specific variables:
 
-_m.cols_: list of indices in a list
++ _m.cols_: list of indices in a list
 
-_M.names_: a list of names for each column.
++ _m.names_: a list of names for each column.
 
-_m.decisions_: the subset of cols relating to decisions.
++ _m.decisions_: the subset of cols relating to decisions.
 
-_m.obectives_: the subset of cols relating to objectives.
++ _m.obectives_: the subset of cols relating to objectives.
 
-_m.eval(m,eg)_: function for computing variables from _eg_.
++ _m.eval(m,eg)_: function for computing variables from _eg_.
 
-_m.lo[c]_ : the lowest value in column _c_.
++ _m.lo[c]_ : the lowest value in column _c_.
 
-_m.hi[c]_ : the highest value in column _c_.
++ _m.hi[c]_ : the highest value in column _c_.
 
-_m.w[c]_: the weight for each column. Usually equal to one. If an objeective and if we are
-minimizing  that objective,
-then the weight is negative.
++ _m.w[c]_: the weight for each column. Usually equal to one. 
+  If an objective and if we are minimizing  that objective, then the weight is negative.
 
 
 ### Model-general stuff
