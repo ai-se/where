@@ -104,6 +104,8 @@ def closest(m,i,all):
   return furthest(m,i,all,init=10**32,better=lt)
 """
 
+## WHERE2 = Recursive Fastmap
+
 
 WHERE2 finds everyone's else's distance from the poles
   and divide the data on the mean point of those
@@ -115,58 +117,53 @@ WHERE2 finds everyone's else's distance from the poles
 + Something has gone horribly wrong and you are
   recursing _tooDeep_
 
-This code is controlled by a set of _slots_.  For
-example, if _slots.pruning_ is true, we may ignore
+This code is controlled by the options in [_The_ settings](settingspy).  For
+example, if _The.pruning_ is true, we may ignore
 some sub-tree (this process is discussed, later on).
-Also, if _slots.verbose_ is true, the _show_
+Also, if _The.verbose_ is true, the _show_
 function prints out a little tree showing the
 progress (and to print indents in that tree, we use
-the string _slots.b4_).  For example, here's WHERE2
-dividing 100 solutions:
-    
-    100
-    |.. 50
-    |.. |.. 25
-    |.. |.. |.. 11
-    |.. |.. |.. |.. 6.
-    |.. |.. |.. |.. 5.
-    |.. |.. |.. 14
-    |.. |.. |.. |.. 6.
-    |.. |.. |.. |.. 8.
-    |.. |.. 25
-    |.. |.. |.. 12
-    |.. |.. |.. |.. 5.
-    |.. |.. |.. |.. 7.
-    |.. |.. |.. 13
-    |.. |.. |.. |.. 5.
-    |.. |.. |.. |.. 8.
-    |.. 50
-    |.. |.. 25
-    |.. |.. |.. 13
-    |.. |.. |.. |.. 7.
-    |.. |.. |.. |.. 6.
-    |.. |.. |.. 12
-    |.. |.. |.. |.. 5.
-    |.. |.. |.. |.. 7.
-    |.. |.. 25
+the string _The.b4_).  For example, here's WHERE2
+dividing 93 examples from NASA93.
+ 
+    ---| _where |-----------------
+    93
+    |.. 46
+    |.. |.. 23
     |.. |.. |.. 11
     |.. |.. |.. |.. 5.
     |.. |.. |.. |.. 6.
-    |.. |.. |.. 14
-    |.. |.. |.. |.. 7.
-    |.. |.. |.. |.. 7.
+    |.. |.. |.. 12
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. |.. 6.
+    |.. |.. 23
+    |.. |.. |.. 11
+    |.. |.. |.. |.. 5.
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. 12
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. |.. 6.
+    |.. 47
+    |.. |.. 23
+    |.. |.. |.. 11
+    |.. |.. |.. |.. 5.
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. 12
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. |.. 6.
+    |.. |.. 24
+    |.. |.. |.. 12
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. 12
+    |.. |.. |.. |.. 6.
+    |.. |.. |.. |.. 6.
 
-Here's the slots:
-
-""" 
-
-"""
 
 WHERE2 returns clusters, where each cluster contains
 multiple solutions.
 
 """
-
 def where2(m,data):
   out = []
   where2a(m,data,0,out)
@@ -191,23 +188,7 @@ def where2a(m, data,lvl, out):
       where2a(m, easts,  lvl+1, out)
 """
 
-Is this useful? Well, in the following experiment, I
-clustered 32, 64, 128, 256 individuals using WHERE2 or
-a dumb greedy approach called GAC that (a) finds
-everyone's closest neighbor; (b) combines each such
-pair into a super-node; (c) then repeats
-(recursively) for the super-nodes.
-
-[[etc/img/gacWHEREruntimes.png]]
-
-
-
-
-WHERE2 is _much_ faster than GAC since it builds
-a tree of cluster of height log(N) by, at each
-step, making only  O(2N) calls to FastMap.
-
-### Experimental Extensions
+## An Experimental Extensions
 
 Lately I've been experimenting with a system that
 prunes as it divides the data. GALE checks for
@@ -249,18 +230,27 @@ descended at least _slots.depthMin_ into the tree.
 
 ### Model-specific Stuff
 
-WHERE2 talks to models via the the following model-specific functions.
-Here, we must invent some made-up model that builds
-individuals with 4 decisions and 3 objectives.
-In practice, you would **start** here to build hooks from WHERE2 into your model
-(which is the **m** passed in to these functions).
+WHERE2 talks to models via the the following model-specific variables:
 
-"""
+_m.cols_: list of indices in a list
+
+_M.names_: a list of names for each column.
+
+_m.decisions_: the subset of cols relating to decisions.
+
+_m.obectives_: the subset of cols relating to objectives.
+
+_m.eval(m,eg)_: function for computing variables from _eg_.
+
+_m.lo[c]_ : the lowest value in column _c_.
+
+_m.hi[c]_ : the highest value in column _c_.
+
+_m.w[c]_: the weight for each column. Usually equal to one. If an objeective and if we are
+minimizing  that objective,
+then the weight is negative.
 
 
-"""
-
-The call to 
 ### Model-general stuff
 
 Using the model-specific stuff, WHERE2 defines some
@@ -270,11 +260,6 @@ useful general functions.
 def some(m,x) :
   "with variable x of model m, pick one value at random" 
   return m.lo[x] + by(m.hi[x] - m.lo[x])
-
-def candidate(m):
-  "Return an individual."
-  for row in m._rows:
-    yield row
 
 def scores(m,it):
   "Score an individual."
@@ -291,7 +276,13 @@ def scores(m,it):
     it.score = (new**0.5) / (w**0.5)
     it.scored = True
   return it.score
+"""
 
+## Demo Code
+
+### Code Showing the scores
+
+"""
 #@go
 def _scores():
   m = nasa93()
@@ -303,12 +294,7 @@ def _scores():
     print(s,x)
 """
 
-
-### Demo stuff
-
-To run these at load time, add _@go_ (uncommented) on the line before.
-
-Checks that we can find lost and distant things:
+### Code Showing the Distances
 
 """
 #@go
@@ -325,11 +311,9 @@ def _distances(m=nasa93):
            gs(idec), g(scores(m,i)),"\n",
            gs(jdec),"closest ", g(dist(m,i,j)),"\n",
            gs(kdec),"furthest", g(dist(m,i,k)))
-    
-
 """
 
-A standard call to WHERE2, pruning disabled:
+### A Demo for  Where2.
 
 """
 @go
