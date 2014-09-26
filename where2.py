@@ -164,28 +164,26 @@ WHERE2 returns clusters, where each cluster contains
 multiple solutions.
 
 """
-def where2(m,data):
-  out = []
-  where2a(m,data,0,out)
-  return out
-
-def where2a(m, data,lvl, out):
+def where2(m, data, lvl=0, up=None):
+  node = o(val=None,_up=up,_kids=[])
   def tooDeep(): return lvl > The.depthMax
   def tooFew() : return len(data) < The.minSize
   def show(suffix): 
     if The.verbose: 
-      print(The.b4*lvl,len(data),suffix,sep='')
+      print(The.b4*lvl,len(data),
+            suffix,' ; ',id(node) % 1000,sep='')
   if tooDeep() or tooFew():
     show(".")
-    out += [data]
+    node.val = data
   else:
     show("")
     wests,west, easts,east = fastmap(m,data)
     goLeft, goRight = maybePrune(m,lvl,west,east)
     if goLeft: 
-      where2a(m, wests, lvl+1, out)
+      node._kids += [where2(m, wests, lvl+1, node)]
     if goRight: 
-      where2a(m, easts,  lvl+1, out)
+      node._kids += [where2(m, easts,  lvl+1, node)]
+  return node
 """
 
 ## An Experimental Extensions
@@ -270,6 +268,40 @@ def scores(m,it):
   return it.score
 """
 
+## Tree Code
+
+Tools for manipulating the tree returned by _where2_.
+
+"""
+def nodes(tree,lvl=0):
+  if tree:
+    yield tree,lvl
+    for kid in tree._kids:
+      for sub,lvl1 in nodes(kid,lvl+1):
+        yield sub,lvl1
+
+def leaves(tree):
+  for node,lvl in nodes(tree):
+    if not node._kids:
+      yield node
+
+def neighbors(leaf,used=None):
+  """Walk the tree from 'leaf' increasingly
+     distant leaves. """
+  def novel(x):
+    if id(x) in used: return False
+    used.append(id(x))
+    return True
+  if used is None: used=[]
+  if leaf:
+    if novel(leaf):
+      for down in leaves(leaf):
+        if novel(down):
+          yield down
+      for up in neighbors(leaf._up, used+[id(leaf)]):
+        if novel(up):
+          yield up
+"""
 ## Demo Code
 
 ### Code Showing the scores
@@ -321,6 +353,14 @@ def _where(m=nasa93):
                minSize = len(m._rows)**0.5,
                prune   = False,
                wriggle = 0.3*told.sd())
+  tree = where2(m, m._rows)
   n=0
-  for leaf in where2(m, m._rows):
-    n += len(leaf)
+  for node in leaves(tree):
+    m  = len(node.val)
+    #print(m,' ',end="")
+    n += m
+    print(id(node) % 1000, ' ',end='')
+    for near in neighbors(node):
+      print(id(near) % 1000,' ',end='')
+    print("")
+  print(n)
