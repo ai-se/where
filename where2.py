@@ -41,7 +41,7 @@ def fastmap(m,data):
   mid   = len(lst)//2
   wests = map(second,lst[:mid])
   easts = map(second,lst[mid:])
-  return wests,west, easts,east
+  return wests,west, easts,east,c
 """
 
 In the above:
@@ -177,7 +177,8 @@ def where2(m, data, lvl=0, up=None):
     node.val = data
   else:
     show("")
-    wests,west, easts,east = fastmap(m,data)
+    wests,west, easts,east,c = fastmap(m,data)
+    node.update(c=c,east=east,west=west)
     goLeft, goRight = maybePrune(m,lvl,west,east)
     if goLeft: 
       node._kids += [where2(m, wests, lvl+1, node)]
