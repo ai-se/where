@@ -304,19 +304,19 @@ Returns nodes divided into lists,
 one for each distance from leaf.
 
 """
-def around(leaf):
-  out,tmp,last  = [],[], None
+def around(leaf, f=lambda x: x):
+  tmp,last  = [], None
   for node,dist in neighbors(leaf):
     if dist > 0:
       if dist == last:
-        tmp += [node]
+        tmp += [f(node)]
       else:
-        out += [(last,tmp)]
-        tmp   = [node]
+        if tmp:
+          yield last,tmp
+        tmp   = [f(node)]
     last = dist
   if tmp:
-    out += [(last,tmp)]
-  return out
+    yield last,tmp
 """
 ## Demo Code
 
@@ -380,5 +380,7 @@ def _where(m=nasa93):
       print(dist,id(near) % 1000,' ',end='')
     print("")
   print(n)
+  filter = lambda z: id(z) % 1000
   for node,_ in leaves(tree):
-    print(around(node))
+    print(filter(node), 
+          [x for x in around(node,filter)])
