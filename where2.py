@@ -298,16 +298,21 @@ def neighbors(leaf,seen=None,steps=-1):
   if leaf:
     for up,steps1 in neighbors(leaf._up, seen,steps+1):
       yield up,steps1
+"""
 
+Returns nodes divided into lists, 
+one for each distance from leaf.
+
+"""
 def around(leaf):
   out,tmp,last  = [],[], None
   for node,dist in neighbors(leaf):
     if dist > 0:
       if dist == last:
-        tmp += [id(node)%1000]
+        tmp += [node]
       else:
         out += [(last,tmp)]
-        tmp   = [id(node)%1000]
+        tmp   = [node]
     last = dist
   if tmp:
     out += [(last,tmp)]
