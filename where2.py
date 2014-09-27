@@ -274,34 +274,44 @@ def scores(m,it):
 Tools for manipulating the tree returned by _where2_.
 
 """
-def nodes(tree,lvl=0):
+def nodes(tree,seen=None,steps=0):
+  if seen is None: seen=[]
   if tree:
-    yield tree,lvl
-    for kid in tree._kids:
-      for sub,lvl1 in nodes(kid,lvl+1):
-        yield sub,lvl1
+   if not id(tree) in seen:
+     seen.append(id(tree))
+     yield tree,steps
+     for kid in tree._kids:
+       for sub,steps1 in nodes(kid,seen,steps+1):
+         yield sub,steps1
 
-def leaves(tree):
-  for node,lvl in nodes(tree):
+def leaves(tree,seen=None,steps=0):
+  for node,steps1 in nodes(tree,seen,steps):
     if not node._kids:
-      yield node
+      yield node,steps1
 
-def neighbors(leaf,used=None):
+def neighbors(leaf,seen=None,steps=-1):
   """Walk the tree from 'leaf' increasingly
      distant leaves. """
-  def novel(x):
-    if id(x) in used: return False
-    used.append(id(x))
-    return True
-  if used is None: used=[]
+  if seen is None: seen=[]
+  for down,steps1 in leaves(leaf,seen,steps+1):
+    yield down,steps1
   if leaf:
-    if novel(leaf):
-      for down in leaves(leaf):
-        if novel(down):
-          yield down
-      for up in neighbors(leaf._up, used+[id(leaf)]):
-        if novel(up):
-          yield up
+    for up,steps1 in neighbors(leaf._up, seen,steps+1):
+      yield up,steps1
+
+def around(leaf):
+  out,tmp,last  = [],[], None
+  for node,dist in neighbors(leaf):
+    if dist > 0:
+      if dist == last:
+        tmp += [id(node)%1000]
+      else:
+        out += [(last,tmp)]
+        tmp   = [id(node)%1000]
+    last = dist
+  if tmp:
+    out += [(last,tmp)]
+  return out
 """
 ## Demo Code
 
@@ -356,12 +366,14 @@ def _where(m=nasa93):
                wriggle = 0.3*told.sd())
   tree = where2(m, m._rows)
   n=0
-  for node in leaves(tree):
+  for node,_ in leaves(tree):
     m  = len(node.val)
     #print(m,' ',end="")
     n += m
     print(id(node) % 1000, ' ',end='')
-    for near in neighbors(node):
-      print(id(near) % 1000,' ',end='')
+    for near,dist in neighbors(node):
+      print(dist,id(near) % 1000,' ',end='')
     print("")
   print(n)
+  for node,_ in leaves(tree):
+    print(around(node))
