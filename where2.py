@@ -273,6 +273,8 @@ def scores(m,it):
 
 Tools for manipulating the tree returned by _where2_.
 
+### Primitive: Walk the nodes
+
 """
 def nodes(tree,seen=None,steps=0):
   if seen is None: seen=[]
@@ -283,12 +285,20 @@ def nodes(tree,seen=None,steps=0):
      for kid in tree._kids:
        for sub,steps1 in nodes(kid,seen,steps+1):
          yield sub,steps1
+"""
 
+### Return nodes that are leaves
+
+"""
 def leaves(tree,seen=None,steps=0):
   for node,steps1 in nodes(tree,seen,steps):
     if not node._kids:
       yield node,steps1
+"""
 
+### Return nodes nearest to furthest
+
+"""
 def neighbors(leaf,seen=None,steps=-1):
   """Walk the tree from 'leaf' increasingly
      distant leaves. """
@@ -300,8 +310,8 @@ def neighbors(leaf,seen=None,steps=-1):
       yield up,steps1
 """
 
-Returns nodes divided into lists, 
-one for each distance from leaf.
+### Return nodes in Groups, Closest to Furthest
+
 
 """
 def around(leaf, f=lambda x: x):
