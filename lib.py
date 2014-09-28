@@ -19,6 +19,17 @@ from settings import *
 """
 def gt(x,y): return x > y
 def lt(x,y): return x < y
+
+def median(lst, ordered=False):
+  if not ordered: 
+    lst = sorted(lst)
+  n = len(lst)
+  q = n//2
+  if n % 2: 
+    return lst[q]
+  else:
+    p = max(0,q-1)
+    return (lst[p] + lst[q]) * 0.5
 """
 
 An accumulator for numbers.
@@ -190,7 +201,8 @@ def data(indep=[], less=[], more=[], _rows=[]):
   ndep  = len(less) + len(more)
   m= o(lo={}, hi={}, w={}, 
        eval  = lambda m,it : True,
-       _rows = [o(cells=r,score=0,scored=False) 
+       _rows = [o(cells=r,score=0,scored=False,
+                  x0=None,y0=None) 
                 for r in _rows],
        names = indep+less+more)
   m.decisions  = [x for x in range(nindep)]
