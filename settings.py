@@ -59,7 +59,9 @@ def defaults(**also):
       b4      = '|.. ', # indent string
       verbose = False,  # show trace info?
       hedges  = 0.38,   # strict=0.38,relax=0.17)
-      seed    = 1
+      seed    = 1,
+      cache   = o(keep = 128,
+                  more= 1.2)
   ).update(**also)
 """
 
