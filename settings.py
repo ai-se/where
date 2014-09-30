@@ -72,11 +72,8 @@ def defaults(**also):
   ).update(**also)
 """
 
-And a global to hold the defaults.
+And a global to hold the top-level tree of the defaults.
 
 """
 The=defaults()
-"""
 
-That's all folks.
-"""

@@ -177,11 +177,15 @@ WHERE2 returns clusters, where each cluster contains
 multiple solutions.
 
 """
+the('what',goal=lambda m,x : scores(m,x))
+
 def what(m,data):
-  
-def what1(m, data, lvl=0, up=None, asIs = 10**32):
+
+def what1(m, data, lvl=0, up=None, sd = None):
+  if sd is None:
+    sd = N(map(The.what.goal(m), data)).sd()
   node = o(val=None,_up=up,_kids=[], support=len(data),
-           centroid= summary(data),sd = asIs)
+           centroid= summary(data),sd=sd)
   def tooDeep(): return lvl > The.depthMax
   def tooFew() : return len(data) < The.minSize
   def show(suffix): 
@@ -197,12 +201,12 @@ def what1(m, data, lvl=0, up=None, asIs = 10**32):
     node.update(c=c,east=east,west=west)
     for split in splits:
       if len(split.data) < len(data):
-        if split.sd*100 < asIs:
+        if split.sd*100 < sd:
           node._kids += [o(cut=split.cut,
                            sub=what1(m, split.data,
                                  lvl=lvl+1,
                                  up=node,
-                                 asIs = split.sd))]
+                                 sd = split.sd))]
   return node
 
 
