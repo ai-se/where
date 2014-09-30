@@ -35,6 +35,8 @@ def medianIQR(lst, ordered=False):
 def median(lst,ordered=False):
   return medianIQR(lst,ordered)[0]
 
+
+
 """
 
 An accumulator for reporting on numbers.
@@ -69,7 +71,7 @@ class N():
     i.m2 -= delta*(x - i.mu)  
     return i
 
-class Cache(o):
+class Cache:
   "Keep a random sample of stuff seen so far."
   def __init__(i,inits=[]):
     i.all,i.n,i._has = [],0,None
@@ -103,12 +105,11 @@ any  = random.choice
 rand = random.random
 
 def seed(r=None):
+  global The
+  if The is None: The=defaults()
   if r is None: r = The.seed
   rseed(r)
 
-seed()
-print(The)
-#Cache(rand() for _ in xrange(1000)))
 """
 
 ### List Handling Tricks

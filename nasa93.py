@@ -126,5 +126,5 @@ Demo code:
 """
 def _nasa93(): print(nasa93())
 
-if __name__ == '__main__': eval(todo('_nasa93()'))
+#if __name__ == '__main__': eval(todo('_nasa93()'))
 

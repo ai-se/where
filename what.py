@@ -117,6 +117,48 @@ def closest(m,i,all):
   return furthest(m,i,all,init=10**32,better=lt)
 """
 
+### Model-specific Stuff
+
+WHAT talks to models via the the following model-specific variables:
+
++ _m.cols_: list of indices in a list
++ _m.names_: a list of names for each column.
++ _m.decisions_: the subset of cols relating to decisions.
++ _m.obectives_: the subset of cols relating to objectives.
++ _m.eval(m,eg)_: function for computing variables from _eg_.
++ _m.lo[c]_ : the lowest value in column _c_.
++ _m.hi[c]_ : the highest value in column _c_.
++ _m.w[c]_: the weight for each column. Usually equal to one. 
+  If an objective and if we are minimizing  that objective, then the weight is negative.
+
+
+### Model-general stuff
+
+Using the model-specific stuff, WHAT defines some
+useful general functions.
+
+"""
+def some(m,x) :
+  "with variable x of model m, pick one value at random" 
+  return m.lo[x] + by(m.hi[x] - m.lo[x])
+
+def scores(m,it):
+  "Score an individual."
+  if not it.scored:
+    m.eval(m,it)
+    new, w = 0, 0
+    for c in m.objectives:
+      val = it.cells[c]
+      w  += abs(m.w[c])
+      tmp = norm(m,c,val)
+      if m.w[c] < 0: 
+        tmp = 1 - tmp
+      new += (tmp**2) 
+    it.score = (new**0.5) / (w**0.5)
+    it.scored = True
+  return it.score
+"""
+
 ## WHERE2 = Recursive Fastmap
 
 
@@ -177,20 +219,20 @@ WHERE2 returns clusters, where each cluster contains
 multiple solutions.
 
 """
-the('what',goal=lambda m,x : scores(m,x))
-
 def what(m,data):
-
+  
+  score = lambda x: The.what.goal(m,x)
+  all = N(map(score, data))
+  return what1(m,data, sd=all.sd()) 
+  
 def what1(m, data, lvl=0, up=None, sd = None):
-  if sd is None:
-    sd = N(map(The.what.goal(m), data)).sd()
   node = o(val=None,_up=up,_kids=[], support=len(data),
            centroid= summary(data),sd=sd)
   def tooDeep(): return lvl > The.depthMax
   def tooFew() : return len(data) < The.minSize
   def show(suffix): 
-    if The.verbose: 
-      print(The.b4*lvl,len(data),
+    if The.what.verbose: 
+      print(The.what.b4*lvl,len(data),
             suffix,' ; ',id(node) % 1000,' :sd ',node.sd,sep='')
   if tooDeep() or tooFew():
     show(".")
@@ -201,14 +243,13 @@ def what1(m, data, lvl=0, up=None, sd = None):
     node.update(c=c,east=east,west=west)
     for split in splits:
       if len(split.data) < len(data):
-        if split.sd*100 < sd:
+        if lvl >= The.what.depthMin and split.sd*100 < sd:
           node._kids += [o(cut=split.cut,
                            sub=what1(m, split.data,
                                  lvl=lvl+1,
                                  up=node,
                                  sd = split.sd))]
   return node
-
 
 def summary(rows):
   def med(*l): return median(l)
@@ -219,47 +260,6 @@ def summary(rows):
 
 
 
-### Model-specific Stuff
-
-WHAT talks to models via the the following model-specific variables:
-
-+ _m.cols_: list of indices in a list
-+ _m.names_: a list of names for each column.
-+ _m.decisions_: the subset of cols relating to decisions.
-+ _m.obectives_: the subset of cols relating to objectives.
-+ _m.eval(m,eg)_: function for computing variables from _eg_.
-+ _m.lo[c]_ : the lowest value in column _c_.
-+ _m.hi[c]_ : the highest value in column _c_.
-+ _m.w[c]_: the weight for each column. Usually equal to one. 
-  If an objective and if we are minimizing  that objective, then the weight is negative.
-
-
-### Model-general stuff
-
-Using the model-specific stuff, WHAT defines some
-useful general functions.
-
-"""
-def some(m,x) :
-  "with variable x of model m, pick one value at random" 
-  return m.lo[x] + by(m.hi[x] - m.lo[x])
-
-def scores(m,it):
-  "Score an individual."
-  if not it.scored:
-    m.eval(m,it)
-    new, w = 0, 0
-    for c in m.objectives:
-      val = it.cells[c]
-      w  += abs(m.w[c])
-      tmp = norm(m,c,val)
-      if m.w[c] < 0: 
-        tmp = 1 - tmp
-      new += (tmp**2) 
-    it.score = (new**0.5) / (w**0.5)
-    it.scored = True
-  return it.score
-"""
 
 ## Tree Code
 
@@ -359,7 +359,8 @@ def _scores():
 
 """
 #@go
-def _distances(m=nasa93):
+def _distances(m=None):
+   if m == None:  m = nasa93
    m=m()
    seed(The.seed)
    for i in m._rows:
@@ -377,6 +378,8 @@ def _distances(m=nasa93):
 ### A Demo for  What.
 
 """
+The=defaults()
+print(The.cache.size)
 @go
 def _where(m=nasa93):
   m= m()
@@ -386,8 +389,8 @@ def _where(m=nasa93):
     s =  scores(m,r)
     told += s
   global The
-  The=defaults(verbose = True,
-               minSize = len(m._rows)**0.5,
+  The.what.update(verbose = True,
+               minSize = 2*len(m._rows)**0.5,
                prune   = False,
                wriggle = 0.3*told.sd())
   tree = what(m, m._rows) 

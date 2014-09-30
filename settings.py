@@ -24,20 +24,22 @@ class o:
     if len(txt) > 60:
       show=map(lambda x: '\t'+x+'\n',show)
     return '{'+' '.join(show)+'}'
-"""
 
-## Defining the defaults
+class E:
+  def __init__(i,txt):
+    i.txt   = txt
+    i._f    = None
+  def __call__(i,*lst,**d):
+    return i.f()(*lst,**d)
+  def f(i):
+    
+    if not i._f: i._f=globals()[i.txt]
+    return i._f
+  def __repr__(i):
+    return i.txt+'()'
 
-"""
-
-def the(what,**d):
-  global The
-  if  what in The.has(): 
-    print('Options name class: that name [%s] is taken.' % what)
-    exit()
-  The.has()[what] = o(**d)
-  
-def defaults(**also):
+def defaults():
+  def myscore(m,x): return scores(m,x)
   return o(_logo="""
             ,.-""``""-.,
            /  ,:,;;,;,  \ 
@@ -63,21 +65,17 @@ def defaults(**also):
            |     ||     |
            |     ||     |
            '-----''-----'""",
-      minSize  = 10,    # min leaf size
-      depthMin= 2,      # no pruning till this depth
-      depthMax= 10,     # max tree depth
-      wriggle = 0.2,    # min difference of 'better'
-      prune   = True,   # pruning enabled?
-      b4      = '|.. ', # indent string
-      verbose = False,  # show trace info?
-      hedges  = 0.38,   # strict=0.38,relax=0.17)
+      what=o(minSize  = 10,    # min leaf size
+             depthMin= 2,      # no pruning till this depth
+             depthMax= 10,     # max tree depth
+             wriggle = 0.2,    # min difference of 'better'
+             prune   = True,   # pruning enabled?
+             b4      = '|.. ', # indent string
+             verbose = False,  # show trace info?
+             goal    = myscore
+             ),
       seed    = 1,
-           cache   = o(size=128)
-  ).update(**also)
-"""
+      cache   = o(size=128)
+  )
 
-And a global to hold the top-level tree of the defaults.
-
-"""
-The=defaults()
-
+The=None
