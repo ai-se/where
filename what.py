@@ -2,10 +2,11 @@
 
 # A Better Where
 
-WHERE3 is a super-version of WHERE2, a near-linear time top-down clustering algorithm.
+WHAT uses an adaption of the WHERE2 strategy to implement a supervised
+near-linear time top-down clustering algorithm.
 
 + At each division, it keeps a summary of the data in a new _centroid_ variable.
-+ Instead of dividing the data in half at each division, WHERE3
++ Instead of dividing the data in half at each division, WHAT
   splits in order to minimize the variance of the scores in each division. 
 
 
@@ -176,7 +177,9 @@ WHERE2 returns clusters, where each cluster contains
 multiple solutions.
 
 """
-def where3(m, data, lvl=0, up=None, asIs = 10**32):
+def what(m,data):
+  
+def what1(m, data, lvl=0, up=None, asIs = 10**32):
   node = o(val=None,_up=up,_kids=[], support=len(data),
            centroid= summary(data),sd = asIs)
   def tooDeep(): return lvl > The.depthMax
@@ -196,11 +199,12 @@ def where3(m, data, lvl=0, up=None, asIs = 10**32):
       if len(split.data) < len(data):
         if split.sd*100 < asIs:
           node._kids += [o(cut=split.cut,
-                           sub=where3(m, split.data,
+                           sub=what1(m, split.data,
                                  lvl=lvl+1,
                                  up=node,
                                  asIs = split.sd))]
   return node
+
 
 def summary(rows):
   def med(*l): return median(l)
@@ -213,7 +217,7 @@ def summary(rows):
 
 ### Model-specific Stuff
 
-WHERE3 talks to models via the the following model-specific variables:
+WHAT talks to models via the the following model-specific variables:
 
 + _m.cols_: list of indices in a list
 + _m.names_: a list of names for each column.
@@ -228,7 +232,7 @@ WHERE3 talks to models via the the following model-specific variables:
 
 ### Model-general stuff
 
-Using the model-specific stuff, WHERE3 defines some
+Using the model-specific stuff, WHAT defines some
 useful general functions.
 
 """
@@ -255,7 +259,7 @@ def scores(m,it):
 
 ## Tree Code
 
-Tools for manipulating the tree returned by _where3_.
+Tools for manipulating the tree returned by _what_.
 
 ### Primitive: Walk the nodes
 
@@ -366,7 +370,7 @@ def _distances(m=nasa93):
            gs(kdec),"furthest", g(dist(m,i,k)))
 """
 
-### A Demo for  Where3.
+### A Demo for  What.
 
 """
 @go
@@ -382,7 +386,7 @@ def _where(m=nasa93):
                minSize = len(m._rows)**0.5,
                prune   = False,
                wriggle = 0.3*told.sd())
-  tree = where3(m, m._rows) 
+  tree = what(m, m._rows) 
   n=0
   #for node,_ in leaves(tree):
   #  n += len(node.data)

@@ -20,31 +20,79 @@ from settings import *
 def gt(x,y): return x > y
 def lt(x,y): return x < y
 
-def median(lst, ordered=False):
+def medianIQR(lst, ordered=False):
   if not ordered: 
     lst = sorted(lst)
   n = len(lst)
-  q = n//2
+  q = n//4
+  iqr = lst[q*3] - lst[q]
   if n % 2: 
-    return lst[q]
+    return lst[q*2],iqr
   else:
     p = max(0,q-1)
-    return (lst[p] + lst[q]) * 0.5
+    return (lst[p] + lst[q]) * 0.5,iqr
+
+def median(lst,ordered=False):
+  return medianIQR(lst,ordered)[0]
+
 """
 
-An accumulator for numbers.
+An accumulator for reporting on numbers.
 
 """
-class N:
-  "An Accumulator for numbers"
-  def __init__(i): i.n = i.m2 = i.mu = 0.0
-  def sd(i)       : return (i.m2/(i.n - 1))**0.5
+class N(): 
+  "Add/delete counts of numbers."
+  def __init__(i,inits=[]):
+    i.zero()
+    map(i.__iadd__,inits)
+  def zero(i): 
+    i.n = i.mu = i.m2 = 0
+    i.cache= Cache()
+  def sd(i)  : 
+    if i.n < 2: 
+      return 0
+    else:       
+      return (max(0,i.m2)/(i.n - 1))**0.5
   def __iadd__(i,x):
-    i.n   += 1    
-    delta  = x - i.mu
-    i.mu  += delta*1.0/i.n
-    i.m2  += delta*(x - i.mu)
+    i.cache += x
+    i.n     += 1
+    delta    = x - i.mu
+    i.mu    += delta/(1.0*i.n)
+    i.m2    += delta*(x - i.mu)
     return i
+  def __isub__(i,x):
+    i.cache = Cache()
+    if i.n < 2: return i.zero()
+    i.n  -= 1
+    delta = x - i.mu
+    i.mu -= delta/(1.0*i.n)
+    i.m2 -= delta*(x - i.mu)  
+    return i
+
+class Cache:
+  "Keep a random sample of stuff seen so far."
+  the('cache',size=128)
+  def __init__(i,inits=[]):
+    i.all,i.n,i._has = [],0,None
+    map(i.__iadd__,inits)
+  def __iadd__(i,x):
+    i.n += 1
+    if len(i.all) < The.cache.size: # if not full
+      i._has = None
+      i.all += [x]               # then add
+    else: # otherwise, maybe replace an old item
+      if random.random() <= The.cache.size/i.n:
+        i._has=None
+        i.all[int(random.random()*The.cache.size)] = x
+    return i
+  def has(i):
+    if i._has == None:
+      lst  = sorted(i.all)
+      med,iqr = medianIQR(i.all,ordered=True)
+      i._has = o(
+        median = med,      iqr = iqr,
+        lo     = i.all[0], hi  = i.all[-1])
+    return i._has
 """
 
 ### Random stuff.

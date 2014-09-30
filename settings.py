@@ -13,11 +13,12 @@ sys.dont_write_bytecode = True
 
 """
 class o:
-  def __init__(i,**d): i.update(**d)
-  def update(i,**d) : i.__dict__.update(d); return i
+  def __init__(i,**d): i.has().update(**d)
+  def has(i): return i.__dict__
+  def update(i,**d) : i.has().update(d); return i
   def __repr__(i)   : 
-    show=['\t:%s %s\n' % (k,i.__dict__[k]) 
-      for k in sorted(i.__dict__.keys() ) 
+    show=['\t:%s %s\n' % (k,i.has()[k]) 
+      for k in sorted(i.has().keys() ) 
       if k[0] is not "_"]
     return '{'+' '.join(show)+'}'
 """
@@ -25,6 +26,14 @@ class o:
 ## Defining the defaults
 
 """
+
+def the(what,**d):
+  global The
+  if  what in The.has(): 
+    print('Options name class: that name [%s] is taken.' % what)
+    exit()
+  The.has()[what] = o(**d)
+  
 def defaults(**also):
   return o(_logo="""
             ,.-""``""-.,
@@ -59,9 +68,7 @@ def defaults(**also):
       b4      = '|.. ', # indent string
       verbose = False,  # show trace info?
       hedges  = 0.38,   # strict=0.38,relax=0.17)
-      seed    = 1,
-      cache   = o(keep = 128,
-                  more= 1.2)
+      seed    = 1
   ).update(**also)
 """
 
