@@ -17,9 +17,12 @@ class o:
   def has(i): return i.__dict__
   def update(i,**d) : i.has().update(d); return i
   def __repr__(i)   : 
-    show=['\t:%s %s\n' % (k,i.has()[k]) 
+    show=[':%s %s' % (k,i.has()[k]) 
       for k in sorted(i.has().keys() ) 
       if k[0] is not "_"]
+    txt = ' '.join(show)
+    if len(txt) > 60:
+      show=map(lambda x: '\t'+x+'\n',show)
     return '{'+' '.join(show)+'}'
 """
 
@@ -68,7 +71,8 @@ def defaults(**also):
       b4      = '|.. ', # indent string
       verbose = False,  # show trace info?
       hedges  = 0.38,   # strict=0.38,relax=0.17)
-      seed    = 1
+      seed    = 1,
+           cache   = o(size=128)
   ).update(**also)
 """
 

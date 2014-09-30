@@ -69,9 +69,8 @@ class N():
     i.m2 -= delta*(x - i.mu)  
     return i
 
-class Cache:
+class Cache(o):
   "Keep a random sample of stuff seen so far."
-  the('cache',size=128)
   def __init__(i,inits=[]):
     i.all,i.n,i._has = [],0,None
     map(i.__iadd__,inits)
@@ -99,8 +98,17 @@ class Cache:
 
 """
 by   = lambda x: random.uniform(0,x) 
-seed = random.seed
+rseed = random.seed
 any  = random.choice
+rand = random.random
+
+def seed(r=None):
+  if r is None: r = The.seed
+  rseed(r)
+
+seed()
+print(The)
+#Cache(rand() for _ in xrange(1000)))
 """
 
 ### List Handling Tricks
