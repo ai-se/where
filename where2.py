@@ -166,11 +166,11 @@ multiple solutions.
 """
 def where2(m, data, lvl=0, up=None):
   node = o(val=None,_up=up,_kids=[])
-  def tooDeep(): return lvl > The.depthMax
-  def tooFew() : return len(data) < The.minSize
+  def tooDeep(): return lvl > The.what.depthMax
+  def tooFew() : return len(data) < The.what.minSize
   def show(suffix): 
     if The.verbose: 
-      print(The.b4*lvl,len(data),
+      print(The.what.b4*lvl,len(data),
             suffix,' ; ',id(node) % 1000,sep='')
   if tooDeep() or tooFew():
     show(".")
@@ -215,7 +215,7 @@ the other, then ignore the other pole.
 def maybePrune(m,lvl,west,east):
   "Usually, go left then right, unless dominated."
   goLeft, goRight = True,True # default
-  if  The.prune and lvl >= The.depthMin:
+  if  The.prune and lvl >= The.what.depthMin:
     sw = scores(m, west)
     se = scores(m, east)
     if abs(sw - se) > The.wriggle: # big enough to consider
@@ -375,7 +375,7 @@ def _where(m=nasa93):
     s =  scores(m,r)
     told += s
   global The
-  The=defaults(verbose = True,
+  The=defaults().update(verbose = True,
                minSize = len(m._rows)**0.5,
                prune   = False,
                wriggle = 0.3*told.sd())

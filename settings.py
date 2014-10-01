@@ -38,8 +38,7 @@ class E:
   def __repr__(i):
     return i.txt+'()'
 
-def defaults():
-  def myscore(m,x): return scores(m,x)
+def defaults(**d):
   return o(_logo="""
             ,.-""``""-.,
            /  ,:,;;,;,  \ 
@@ -72,10 +71,10 @@ def defaults():
              prune   = True,   # pruning enabled?
              b4      = '|.. ', # indent string
              verbose = False,  # show trace info?
-             goal    = myscore
+             goal    = lambda m,x : scores(m,x)
              ),
       seed    = 1,
       cache   = o(size=128)
-  )
+  ).update(**d)
 
 The=None
