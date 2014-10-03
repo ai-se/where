@@ -4,7 +4,7 @@ all: publish commit
 
 commit:
 	- git status
-	- git commit -am "stuff"
+	- git commit -a
 	- git push origin master
 
 update:
