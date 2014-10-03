@@ -575,31 +575,41 @@ def what(m,data):
   return what1(m,data, sd=all.sd()) 
   
 def what1(m, data, lvl=0, up=None, sd=None):
-  print(o(v=The.what.verbose,min=The.what.minSize,
-          lvl=lvl,max=The.what.depthMax,n=len(data)))
+  print(o(verbose=The.what.verbose,minSize=The.what.minSize,
+          lvl=lvl,depthMax=The.what.depthMax,len=len(data)))
   node = o(val=None,_up=up,_kids=[], support=len(data),
            centroid= summary(data),sd=sd)
   def tooDeep(): return lvl > The.what.depthMax
   def tooFew() : return len(data) < The.what.minSize
+  def tooVaried(sdNew):
+    if lvl   < The.what.depthMin: return False
+    if sdNew >= sd: return True
+    return False
   def show(suffix): 
     if The.what.verbose: 
       print(The.what.b4*lvl,len(data),
             suffix,' ; ',id(node) % 1000,' :sd ',node.sd,sep='')
   if tooDeep() or tooFew():
+    print(22)
     show(".")
     node.data = data
   else:
     show("")
+    print(33)
     west,east, c, splits = fastmap(m,data)
     node.update(c=c,east=east,west=west)
     for split in splits:
+      print(34,o(len1=len(split.data),lenData=len(data)))
       if len(split.data) < len(data):
-        if lvl >= The.what.depthMin and split.sd*100 < sd:
-          node._kids += [o(cut = (split.lo, split.hi),
-                           sub = what1(m, split.data,
-                                       lvl= lvl+1,
-                                       up = node,
-                                       sd = split.sd))]
+        print("35",o(dm=The.what.depthMin,lvl2=lvl))
+        if lvl >= The.what.depthMin:
+          print(36,o(sdx=split.sd,sd=sd))
+          if not tooVaried(split.sd):
+            node._kids += [o(cut = (split.lo, split.hi),
+                             sub = what1(m, split.data,
+                                         lvl= lvl+1,
+                                         up = node,
+                                         sd = split.sd))]
   return node
 
 def summary(rows):
@@ -744,6 +754,7 @@ def _what(m=nasa93):
   The.what.update(verbose = True,
                minSize = 0.5*len(m._rows)**0.5,
                prune   = False,
+               depthMax=0,
                wriggle = 0.3*told.sd())
   tree = what(m, m._rows) 
   exit()
