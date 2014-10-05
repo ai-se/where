@@ -684,11 +684,13 @@ def around(leaf, f=lambda x: x):
         tmp += [f(node)]
       else:
         if tmp:
-          yield last,tmp
+          for one in tmp:
+            yield last,one
         tmp   = [f(node)]
     last = dist
   if tmp:
-    yield last,tmp
+    for one in tmp:
+      yield last,one
 """
 ## Demo Code
 
@@ -763,10 +765,12 @@ def _what(m=nasa93):
            sorted([x for x in around(node,filter)]))
   print("===================")
   #exit()
+  failed=0
   for node1,_ in leaves(tree):
     for row in node1.data:
       node2  = leaf(m,row,tree)
-      print(node1.id,node2.id)
+      failed += (0 if node1.id == node2.id else 1)
+  print("Failed:",failed)
 
 #_what()
 
