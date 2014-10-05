@@ -34,7 +34,10 @@ from nasa93 import *
 
 """
 class o:
-  def __init__(i,**d): i.has().update(**d)
+  id=0
+  def __init__(i,**d): 
+    i.id = o.id = o.id + 1
+    i.has().update(**d)
   def has(i): return i.__dict__
   def update(i,**d) : i.has().update(d); return i
   def __repr__(i)   : 
@@ -385,7 +388,7 @@ def fastmap(m,data):
     lst  += [(x,one)]
   lst = sorted(lst)
   splits = sdiv.divides(lst,
-              tiny= 2*len(m._rows)**0.5,
+              tiny= 4,
               num1= first,
               num2= lambda z: scores(m,second(z)))
   return west,east, c, spreadOut(splits,f=second)
@@ -575,10 +578,8 @@ def what(m,data):
   return what1(m,data, sd=all.sd()) 
   
 def what1(m, data, lvl=0, up=None, sd=None):
-  print(o(verbose=The.what.verbose,minSize=The.what.minSize,
-          lvl=lvl,depthMax=The.what.depthMax,len=len(data)))
   node = o(val=None,_up=up,_kids=[], support=len(data),
-           centroid= summary(data),sd=sd)
+           centroid= summary(data),sd=sd,data=data)
   def tooDeep(): return lvl > The.what.depthMax
   def tooFew() : return len(data) < The.what.minSize
   def tooVaried(sdNew):
@@ -588,22 +589,16 @@ def what1(m, data, lvl=0, up=None, sd=None):
   def show(suffix): 
     if The.what.verbose: 
       print(The.what.b4*lvl,len(data),
-            suffix,' ; ',id(node) % 1000,' :sd ',node.sd,sep='')
+            suffix,' ; ',node.id,' :sd ',node.sd,sep='')
   if tooDeep() or tooFew():
-    print(22)
     show(".")
-    node.data = data
   else:
     show("")
-    print(33)
     west,east, c, splits = fastmap(m,data)
     node.update(c=c,east=east,west=west)
     for split in splits:
-      print(34,o(len1=len(split.data),lenData=len(data)))
       if len(split.data) < len(data):
-        print("35",o(dm=The.what.depthMin,lvl2=lvl))
-        if lvl >= The.what.depthMin:
-          print(36,o(sdx=split.sd,sd=sd))
+        if True: #lvl >= The.what.depthMin:
           if not tooVaried(split.sd):
             node._kids += [o(cut = (split.lo, split.hi),
                              sub = what1(m, split.data,
@@ -632,12 +627,13 @@ Tools for manipulating the tree returned by _what_.
 def nodes(tree,seen=None,steps=0):
   if seen is None: seen=[]
   if tree:
-   if not id(tree) in seen:
-     seen.append(id(tree))
-     yield tree,steps
-     for kid in tree._kids:
-       for sub,steps1 in nodes(kid.sub,seen,steps+1):
-         yield sub,steps1
+    i = id(tree)
+    if not i in seen:
+      seen += [i]
+      yield tree,steps
+      for kid in tree._kids:
+        for sub,steps1 in nodes(kid.sub,seen,steps+1):
+          yield sub,steps1
 """
 
 ### Return nodes that are leaves
@@ -654,16 +650,10 @@ def leaf(m,one,node):
     b = dist(m,one,node.east)
     c = node.c
     x = (a*a + c*c - b*b)/(2*c) 
-    cut0 = -1 * 10**32
     #print(map(lambda x:x.cut,node._kids))
-    lo = node._kids[0].cut
-    hi = node._kids[-1].cut
     for kid in node._kids:
-      cut = kid.cut
-      if cut==lo and x <= cut: return leaf(m,one,kid.sub)
-      if cut==hi and x >= cut: return leaf(m,one,kid.sub)
-      if cut0 <= x < cut     : return leaf(m,one,kid.sub)
-      cut0 = cut
+      (lo, hi), sub = kid.cut, kid.sub
+      if lo <= x < hi: return leaf(m,one,kid.sub)
   return node
 
 """
@@ -754,28 +744,29 @@ def _what(m=nasa93):
   The.what.update(verbose = True,
                minSize = 0.5*len(m._rows)**0.5,
                prune   = False,
-               depthMax=0,
+               depthMax= 10,
                wriggle = 0.3*told.sd())
   tree = what(m, m._rows) 
-  exit()
   n=0
-  #for node,_ in leaves(tree):
-  #  n += len(node.data)
-  #  print(id(node) % 1000, ' ',end='')
-  #  for near,dist in neighbors(node):
-  #    print(dist,id(near) % 1000,' ',end='')
-  #  print("")
-  #print(n)
-  filter = lambda z: id(z) % 1000
-#  for node,_ in leaves(tree):
- #   print(filter(node), 
-  #        [x for x in around(node,filter)])
+  print(sorted([node.id for node,_ in nodes(tree)]))
+  for node,_ in leaves(tree):
+    n += len(node.data)
+    print(node.id, ' ',end='')
+    for near,dist in neighbors(node):
+      print(dist,near.id,' ',end='')
+    print("")
+  print("n>",n)
+  
+  filter = lambda z: z.id
+  for node,_ in leaves(tree):
+     print(filter(node), 
+           sorted([x for x in around(node,filter)]))
   print("===================")
-  exit()
+  #exit()
   for node1,_ in leaves(tree):
     for row in node1.data:
       node2  = leaf(m,row,tree)
-      print(id(node1)%1000,id(node2)%1000)
+      print(node1.id,node2.id)
 
 #_what()
 
