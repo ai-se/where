@@ -393,7 +393,7 @@ def fastmap(m,data):
               num2= lambda z: scores(m,second(z)))
   return west,east, c, spreadOut(splits,f=second)
 
-def spreadOut(lst, f=lambda z:z):
+def spreadOut(lst, f=lambda z:z): 
   def oneTwo(lst):
     one = lst[0]
     for two in lst[1:]:
