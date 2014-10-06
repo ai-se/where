@@ -883,11 +883,11 @@ def _loo(m=nasa93):
     say(".")
     want    = test.cells[-3]
     tree    = what(model, train) 
-    close   =leaf(model,test,tree)
-    knn     = closest(model,test,close.data)
+    nearby   =leaf(model,test,tree)
+    nearest  = closest(model,test,nearby.data)
     #centers = [c for c in centroids(tree)]
     #say(len(centers), ' ')
-    got     = knn.cells[-3]
+    got     = nearest.cells[-3]
     n += abs(want - got)/want
     continue
     for k in [1]:
