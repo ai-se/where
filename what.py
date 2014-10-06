@@ -700,9 +700,11 @@ def around(leaf, f=lambda x: x):
 
 """
 
-def loo(lst):
+def loo(m):
+  model = m()
+  lst = model._rows
   for n,one in enumerate(lst):
-    yield one, lst[:n] + lst[n+1:]
+    yield model,one, lst[:n] + lst[n+1:]
 """
 
 ## Data
@@ -717,7 +719,7 @@ def nasa93():
      'docu', 'time', 'stor', 'pvol', 'acap', 'pcap', 'pcon', 'aexp', 'plex',  
      # 18 .. 25
      'ltex', 'tool', 'site', 'sced', 'kloc'],
-    less = ['effort', 'defects', 'months'],
+    less = ['effort'], #, 'defects', 'months'],
     _rows=[
       [h,h,h,vh,h,h,l,h,n,n,n,n,l,n,n,n,n,n,h,n,n,l,25.9,117.6,808,15.3],
       [h,h,h,vh,h,h,l,h,n,n,n,n,l,n,n,n,n,n,h,n,n,l,24.6,117.6,767,15.0],
@@ -867,25 +869,34 @@ The=defaults()
 
 @go
 def _loo(m=nasa93):
-  m= m()
+  model= m()
   seed(1)
   global The
   The.what.update(verbose = False,
-               minSize = 20, #2*len(m._rows)**0.5,
+               minSize = len(model._rows)**0.5,
                prune   = False,
                depthMax= 10,
-               depthMin= 2
+               depthMin= 1
                )
   n = N()
-  for test,train in loo(m._rows):
+  for model,test,train in loo(m):
+    say(".")
     want    = test.cells[-3]
-    tree    = what(m, train) 
-    centers = [c for c in centroids(tree)]
-    say(len(centers), ' ')
-    got     = closest(m,test,centers).cells[-3]
-    n      += abs(want - got)/want
-  print(n.cache.has().median, 
-        n.cache.has().iqr)
+    tree    = what(model, train) 
+    close   =leaf(model,test,tree)
+    knn     = closest(model,test,close.data)
+    #centers = [c for c in centroids(tree)]
+    #say(len(centers), ' ')
+    got     = knn.cells[-3]
+    n += abs(want - got)/want
+    continue
+    for k in [1]:
+      some= closestN(model,k,test,close.data)
+      es = sum(map(lambda x:x[1].cells[-3],some))
+      got=es/k
+      n      += abs(want - got)/want
+  print("\n",":median",n.cache.has().median, 
+        ":has",n.cache.has().iqr)
   exit()
 
 @go
