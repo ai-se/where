@@ -88,15 +88,16 @@ class G:
     i.width, i.cols,i._tiles,i.xys = width, [], None,None
     row1, row2 = Row(i,cells1), Row(i,cells2)
     i.tell(row1);  i.tell(row2)
-    i.poles(row1,row2)
+    i.poles(row1,row2,row2 - row1)
     i.place(row1); i.place(row2)
   def tiles(i):
     i._tiles = i._tiles or [
                [{} for _ in range(i.width)] 
                for j in range(i.width)]
     return i._tiles
-  def poles(west,east):
+  def poles(west,east,c):
     i.west,i.east,i._tiles,i.xys = west,east,None,{}
+    i.c = c
   def tell(i,row):
     def ns(x,n): 
       return N if isinstance(x,(float,int)) else S
@@ -116,11 +117,11 @@ class G:
     i.tell(row)
     a = row - i.west
     b = row - i.east
-    if a > c: 
+    if a > i.c: 
       if not b > a:
-        i.poles(row,i.east)
-    if b > c: 
-      i.poles(i.west,row)
+        i.poles(row,i.east,b)
+    if b > i.c: 
+      i.poles(i.west,row,a)
     return i
 
 class Row:
