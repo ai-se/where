@@ -116,8 +116,11 @@ class G:
     i.tell(row)
     a = row - i.west
     b = row - i.east
-    if a > c: i.poles(row,i.east)
-    if b > c: i.poles(i.west,row)
+    if a > c: 
+      if not b > c:
+        i.poles(row,i.east)
+    if b > c: 
+      i.poles(i.west,row)
     return i
 
 class Row:
