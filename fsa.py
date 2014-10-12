@@ -25,11 +25,21 @@ class o:
       show=map(lambda x: '\t'+x+'\n',show)
     return '{'+' '.join(show)+'}'
 
+def items(x):
+  if isinstance(x,list):
+    for y in x:
+      for z in items(y):  
+        yield z
+  elif isinstance(x,dict):
+    for y in x.values():
+      for z in items(y): 
+        yield z
+  else: 
+    yield x
+
 class S:
-  def __init__(i):
-    i.n = i.most = 0
-    i.mode = None
-    i.w    = 1
+  def __init__(i,pos=0):
+    i.pos,i.n,i.most,i.mode,i.w = pos, 0, 0, None, 1
     i.counts = collections.defaultdict(lambda : 0)
   def diff(i,x,y):
     return 0 if x == y else 1
@@ -52,9 +62,8 @@ def _s():
   print(s.counts,s.mode,s.most)
 
 class N:
-  def __init__(i):
-    i.lo, i.hi = 10**32, -1*10**32
-    i.w = 0
+  def __init__(i,pos=0):
+    i.pos,i.lo,i.hi,i.w = pos, 10**32, -1*10**32, 1
   def near(i,x,y,z,f=0.3):
     return x + f*(y-z)
   def diff(i,x,y):
@@ -75,69 +84,60 @@ def _n():
   print(n.lo,n.hi)
 
 class G:
-  def __init__(i,width=12):
-    i.width = width
-    i.tiles = i.grid0()
-    i.east  = i.west = None
-    i.c = 0
-    i.v    = []
-    i.cols = []
-  def grid0(i):
-    return [[[] for _ in range(i.width)] 
-            for j in range(i.width)]
-  def newPoles(west,east):
-    old = [item for sublist in i.tiles
-                for item in sublist]
-    i.west, i.east = west, east
-    i.c = i.west - i.east
-    i.tiles = i.grid0()
-    for row in old:
-      row.xy0()
+  def __init__(i,cells1,cells2,width=12):
+    i.width, i.cols,i._tiles,i.xys = width, [], None,None
+    row1, row2 = Row(i,cells1), Row(i,cells2)
+    i.tell(row1);  i.tell(row2)
+    i.poles(row1,row2)
+    i.place(row1); i.place(row2)
+  def tiles(i):
+    i._tiles = i._tiles or [
+               [{} for _ in range(i.width)] 
+               for j in range(i.width)]
+    return i._tiles
+  def poles(west,east):
+    i.west,i.east,i._tiles,i.xys = west,east,None,{}
   def tell(i,row):
+    def ns(x,n): 
+      return N if isinstance(x,(float,int)) else S
+    def cols0():
+      return [ns(x)(n) for 
+              n,x in enumerate(row.cells)]
+    i.cols = i.cols or cols0() 
+    for cell,col in zip(row.cells,i.cols): 
+      col += cell
+  def place(i,row):
     x,y = row.xy()
     x = int(round(x * i.width))
     y = int(round(y * i.width))
-    i.tiles[x][y] += [row]
+    i.tiles()[x][y][row.id] = row
   def __iadd__(i, cells):
-    def ns(x): 
-      return N if isinstance(x,(float,int)) else S
-    i.cols = i.cols or [ns(x)() for x in cells]
-    for cell,col in zip(cells,i.cols): 
-      col += cell
     row = Row(i,cells)
-    if not i.east : 
-      i.east = row
-    elif not i.west :
-      i.west = row
-      i.c = i.east - i.west
-    else:
-      a = row - i.west
-      b = row - i.east
-      if a > c:
-        i.newPoles(row,i.east)
-      if b > c:
-        i.newPoles(i.west,row)
-      i.tell(row)
+    i.tell(row)
+    a = row - i.west
+    b = row - i.east
+    if a > c: i.poles(row,i.east)
+    if b > c: i.poles(i.west,row)
     return i
-
-print(G().tiles)
 
 class Row:
   id = 0
   def __init__(i,g,cells=[]):
     i.id = Row.id = Row.id + 1
-    i.g, i.cells, i.lastUpdate = g, cells, -1
-    i.x = i.y = None
+    i.g, i.cells, i.x, i.y = g, cells, None, None
   def xy(i):
-    if not i.x or not i.y:
-      i.xy0()
-    return i.x, i.y
+    cache = i.xys()
+    key   = i.id
+    if not key in cache: 
+      cache[key] = i.xy0()
+    return cache[key]
   def xy0(i):
-    a  = i - i.west
-    b  = i - i.east
-    c  = i.g.c
-    i.x= (a*a + c*c - b*b)/(2*c) 
-    i.y= max(0, a**2 - i.x**2)**0.5 
+    a = i - i.west
+    b = i - i.east
+    c = i.g.c
+    x = (a*a + c*c - b*b)/(2*c + 0.0001) 
+    y = max(0, a**2 - x**2)**0.5 
+    return x,y
   def __sub__(i,j):
     ds = ws = 0
     for x,y,col in zip(i.cells, j.cells,  g.cols):
