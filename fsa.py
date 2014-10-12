@@ -117,7 +117,7 @@ class G:
     a = row - i.west
     b = row - i.east
     if a > c: 
-      if not b > c:
+      if not b > a:
         i.poles(row,i.east)
     if b > c: 
       i.poles(i.west,row)
