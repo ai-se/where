@@ -8,7 +8,15 @@ sys.dont_write_bytecode = True
 
 rseed = random.seed
 any   = random.choice
+rand  = random.random
 
+def cmd(name,todo):
+  if name == '__main__':
+    if len(sys.argv) == 3: 
+      if sys.argv[1] == '--cmd':
+        todo = sys.argv[2]
+  print(eval(todo))
+  
 class o:
   id=0
   def __init__(i, **d): 
@@ -17,13 +25,43 @@ class o:
   def has(i): return i.__dict__
   def update(i,**d) : i.has().update(d); return i
   def __repr__(i)   : 
-    show=[':%s %s' % (k,i.has()[k]) 
-          for k in sorted(i.has().keys() ) 
+    return showd(i.has(),
+                 i.__class__.__name__)
+
+def showd(d,pre=''):
+  show=[':%s %s' % (k,d[k]) 
+          for k in sorted(d.keys() ) 
           if k[0] is not "_"]
-    txt = ' '.join(show)
-    if len(txt) > 60:
-      show=map(lambda x: '\t'+x+'\n',show)
-    return '{'+' '.join(show)+'}'
+  txt = ' '.join(show)
+  if len(txt) > 60:
+    show=map(lambda x: '\t'+x+'\n',show)
+  return pre + '{' + ' '.join(show)+'}'
+
+def defaults(): return o(
+    _logo="""Fast SA (c) 2014 tim.menzies@gmail.com
+
+               ,'``.._   ,'``.
+              :,--._:)\,:,._,.:       All Glory to
+              :`--,''   :`...';\      the HYPNO TOAD!
+               `,'       `---'  `.
+               /                 :
+              /                   \ 
+            ,'                     :\.___,-.
+           `...,---'``````-..._    |:       \ 
+             (                 )   ;:    )   \  _,-.
+              `.              (   //          `'    \ 
+               :               `.//  )      )     , ;
+             ,-|`.            _,'/       )    ) ,' ,'
+            (  :`.`-..____..=:.-':     .     _,' ,'
+             `,'\ ``--....-)='    `._,  \  ,') _ '``._
+          _.-/ _ `.       (_)      /     )' ; / \ \`-.'
+         `--(   `-:`.     `' ___..'  _,-'   |/   `.)
+             `-. `.`.``-----``--,  .'
+               |/`.\`'        ,','); SSt
+                   `         (/  (/
+    """)
+
+The = defaults()
 
 def items(x):
   if isinstance(x,list):
@@ -37,7 +75,11 @@ def items(x):
   else: 
     yield x
 
-class S:
+class Pretty:
+  def __repr__(i): 
+    return showd(i.__dict__,
+                 i.__class__.__name__)
+class S(Pretty):
   def __init__(i,pos=0):
     i.pos,i.n,i.most,i.mode,i.w = pos, 0, 0, None, 1
     i.counts = collections.defaultdict(lambda : 0)
@@ -61,7 +103,7 @@ def _s():
   for _ in xrange(1000): s += any(l)
   print(s.counts,s.mode,s.most)
 
-class N:
+class N(Pretty):
   def __init__(i,pos=0):
     i.pos,i.lo,i.hi,i.w = pos, 10**32, -1*10**32, 1
   def near(i,x,y,z,f=0.3):
@@ -83,36 +125,49 @@ def _n():
   for _ in xrange(10): n += any(l)
   print(n.lo,n.hi)
 
-class G:
-  def __init__(i,cells1,cells2,width=12):
-    i.width, i.cols,i._tiles,i.xys = width, [], None,None
+def _pop():
+  rseed(0)
+  def one(): 
+    return [rand()**(1/(n+1))
+             for n,_ in enumerate(range(10))]
+  p = Population(one(),one())
+  for x in range(100):
+    p.add(one()).xy()
+  for x in items(p.tiles()):    print(x)
+  
+class Population(Pretty):
+  def __init__(i,cells1,cells2,width=100):
+    i.c,i.width, i.cols = 0,width,[]
+    i._tiles, i.xys = i.tiles0(), {}
     row1, row2 = Row(i,cells1), Row(i,cells2)
-    i.tell(row1);  i.tell(row2)
+    i.tell(row1); i.tell(row2)
     i.poles(row1,row2,row2 - row1)
     i.place(row1); i.place(row2)
+  def cols0(i,cells):
+    def ns(x): 
+      return N if isinstance(x,(float,int)) else S
+    return [ns(x)(n) for n,x in enumerate(cells)]
+  def tiles0(i):
+    return [[{} for _ in range(i.width)] 
+            for j in range(i.width)]
   def tiles(i):
-    i._tiles = i._tiles or [
-               [{} for _ in range(i.width)] 
-               for j in range(i.width)]
+    i._tiles = i._tiles or i.tiles0()
     return i._tiles
-  def poles(west,east,c):
+  def poles(i,west,east,c):
+    print('.')
     i.west,i.east,i._tiles,i.xys = west,east,None,{}
     i.c = c
   def tell(i,row):
-    def ns(x,n): 
-      return N if isinstance(x,(float,int)) else S
-    def cols0():
-      return [ns(x)(n) for 
-              n,x in enumerate(row.cells)]
-    i.cols = i.cols or cols0() 
+    i.cols = i.cols or i.cols0(row.cells) 
     for cell,col in zip(row.cells,i.cols): 
       col += cell
   def place(i,row):
     x,y = row.xy()
-    x = int(round(x * i.width))
-    y = int(round(y * i.width))
+    x = max(i.width - 1, int(x * i.width))
+    y = max(i.width - 1, int(y * i.width))
     i.tiles()[x][y][row.id] = row
-  def __iadd__(i, cells):
+  def __iadd__(i, cells): i.add(cells); return i
+  def add(i,cells):
     row = Row(i,cells)
     i.tell(row)
     a = row - i.west
@@ -122,7 +177,7 @@ class G:
         i.poles(row,i.east,b)
     if b > i.c: 
       i.poles(i.west,row,a)
-    return i
+    return row
 
 class Row:
   id = 0
@@ -130,25 +185,24 @@ class Row:
     i.id = Row.id = Row.id + 1
     i.g, i.cells, i.x, i.y = g, cells, None, None
   def xy(i):
-    cache = i.xys()
+    cache = i.g.xys
     key   = i.id
     if not key in cache: 
       cache[key] = i.xy0()
     return cache[key]
   def xy0(i):
-    a = i - i.west
-    b = i - i.east
+    a = i - i.g.west
+    b = i - i.g.east
     c = i.g.c
     x = (a*a + c*c - b*b)/(2*c + 0.0001) 
     y = max(0, a**2 - x**2)**0.5 
     return x,y
   def __sub__(i,j):
     ds = ws = 0
-    for x,y,col in zip(i.cells, j.cells,  g.cols):
+    for x,y,col in zip(i.cells, j.cells, i.g.cols):
       ds += col.diff(x,y)
       ws += col.w
     return ds**0.5 / ws**0.5
-
 
 """
 @include "lib.awk"
@@ -216,3 +270,6 @@ function move(w,olds,news,_Genic,   old,new,pos) {
       olds[pos] = (rand() < 1/w ? old : new)
 }}
 """
+
+cmd(__name__,'The._logo')
+ 
