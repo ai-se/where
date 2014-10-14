@@ -1,6 +1,6 @@
 # thing to determine kinds of cols
 
-def  memo(f):
+def  facet(f):
   key = f.__name__
   def theCache(obj):
     try:
@@ -19,7 +19,7 @@ def  memo(f):
 
 
 class Fred:
-  @memo
+  @facet
   def n(i):
     print 1
     return len(i.__class__.__name__)
