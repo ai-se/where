@@ -885,28 +885,36 @@ def _loo(m=nasa93):
                depthMax= 10,
                depthMin= 1
                )
-  n = N()
+  def effort(row):
+    return row.cells[-3]
+  scores=dict(clusterk1=N(),k1=N())
+  for score in scores.values():
+    score.go=True
   for model,test,train in loo(m):
     say(".")
-    want    = test.cells[-3]
+    want    = effort(test)
     tree    = what(model, train) 
-    nearby   =leaf(model,test,tree)
-    nearest  = closest(model,test,nearby.data)
-    #centers = [c for c in centroids(tree)]
-    #say(len(centers), ' ')
-    got     = nearest.cells[-3]
-    n += abs(want - got)/want
-    continue
-    for k in [1]:
-      some= closestN(model,k,test,close.data)
-      es = sum(map(lambda x:x[1].cells[-3],some))
-      got=es/k
-      n      += abs(want - got)/want
-  print("\n",":median",n.cache.has().median, 
-        ":has",n.cache.has().iqr)
+    def clusterk1(score):
+      nearby   =leaf(model,test,tree)
+      nearest  = closest(model,test,nearby.data)
+      got      = effort(nearest)
+      score   += abs(want - got)/want
+    def knn(score,k=1):
+      some   = closestN(model,k,test,train)
+      es     = sum(map(lambda x:effort(x[1]),some))
+      got    = es/k
+      score += abs(want - got)/want
+    n = scores["clusterk1"]; n.go and clusterk1(n)
+    n = scores["k1"];        n.go and knn(n)
+  print("")
+  for key,n in scores.items():
+    if n.go:
+      print(key,
+            ":median",n.cache.has().median, 
+            ":has",n.cache.has().iqr)
   exit()
 
-@go
+
 def _what(m=nasa93):
   m= m()
   seed(1)
